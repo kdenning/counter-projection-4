@@ -79,10 +79,12 @@ clean_data <- wide_data %>%
                                    `3` = 3, 
                                    `4` = 2, 
                                    `5` = 1))) %>% 
+  # get their two chances to answer about their opinion in the same column
   pivot_longer(c(opin_pol, opin_pol2)) %>% 
   mutate(opin_pol_combined = value) %>% 
   dplyr::select(-value, -name) %>% 
   filter(!is.na(opin_pol_combined)) %>% 
+  # get the BFI scores used for projection in long-format
   pivot_longer(c(SterBFIAnti_1:SterBFIAnti_19,
                SterBFITrump_1:SterBFITrump_19,
                TargBFITrump_1:TargBFITrump_19,
@@ -91,13 +93,16 @@ clean_data <- wide_data %>%
                names_sep = "_",
                names_to = c("bfi_type", "BFI_number")) %>% 
   pivot_wider(names_from = bfi_type, values_from = value) %>% 
+  # wrangle to remove NA's from target, since participants only got one target
   pivot_longer(c(TargBFITrump, TargBFIAnti),
               names_to = "BFI_target_group") %>% 
   mutate_at(vars(value), ~replace(., is.na(.), 99)) %>% 
   filter(value != "99") %>% 
   rename(TargBFI = value) %>% 
+  # create column for target group for BFI
   mutate(BFI_target_group = (dplyr::recode(BFI_target_group, `TargBFITrump`= "Trump", 
                                    `TargBFIAnti`= "Anti"))) %>% 
+  # get everyday responses in long format
   pivot_longer(c(SterEDAnti_1:SterEDAnti_5,
                SterEDTrump_1:SterEDTrump_5,
                TargEDTrump_1:TargEDTrump_5,
@@ -106,11 +111,13 @@ clean_data <- wide_data %>%
                names_sep = "_",
                names_to = c("ed_type", "ED_number")) %>% 
   pivot_wider(names_from = ed_type, values_from = value) %>% 
+  # also need to wrangle to remove NA's due to one target per participant
   pivot_longer(c(TargEDTrump, TargEDAnti),
                names_to = c("ED_targ_group")) %>% 
   mutate_at(vars(value), ~replace(., is.na(.), 99)) %>% 
   filter(value != "99") %>% 
   rename(TargED = value) %>% 
+  # target per everyday responses and making variables factors or numeric
   mutate(ED_targ_group = (dplyr::recode(ED_targ_group, `TargEDTrump`= "Trump", 
                                    `TargEDAnti`= "Anti")),
          ED_number = as.numeric(ED_number),
@@ -126,9 +133,11 @@ clean_data <- wide_data %>%
          native_language = as.factor(native_language),
          citizen = as.factor(citizen),
          us_location = as.factor(us_location)) %>% 
+  # dropping unnecessary text variables
   select(-c(day_nosupport_targ, day_support_trump_targ, gender_3_TEXT,
             race_8_TEXT, country_birth_2_TEXT, country_raised_2_TEXT,
             native_language_2_TEXT, IPAddress)) %>% 
+  # making one variable for the following variables depending on which target participants saw for both BFI and ED
   mutate(stereoBFI = ifelse(BFI_target_group == "Trump", SterBFITrump,
                              ifelse(BFI_target_group == "Anti", SterBFIAnti, 
                                     NA)),
@@ -146,6 +155,7 @@ clean_data <- wide_data %>%
                                   ifelse(opin_pol_combined == 2, threat_pol_antitrump, NA)),
          identification = ifelse(opin_pol_combined == 1, ident_pol_trump,
                                   ifelse(opin_pol_combined == 2, ident_pol_antitrump, NA)),
+         # making manipulation checks all have the same levels so they can be combined to avoid NA's and used to filter out participants; keeping participants who got either qcheck 1 or 2 for the same question right
          qcheck_bfi_anti_total = ifelse(qcheck_bfi_notsupport == 2, 1,
                                         ifelse(qcheck2_bfi_notsupport == 2, 1,
                                                ifelse(qcheck_bfi_notsupport == 1, 2, #recoding so 1 = include and 2 = exclude
@@ -160,6 +170,7 @@ clean_data <- wide_data %>%
          qcheck_targ_anti_total = ifelse(qcheck_targ_nosupport == 2, 1, #recoding so 1 = include, 2 = exclude
                                          ifelse(qcheck2_targ_nosupport == 2, 1,
                                                 ifelse(qcheck_targ_nosupport == 1, 2, NA)))) %>% 
+  # dropping variables no longer needed after creating new variables above
   select(-c(cont_pol_trump, cont_pol_antitrump, fund_pol_trump, 
             fund_pol_antitrump, lib_pol_trump_8, lib_pol_antitrump_8,
             cons_pol_antitrump_8, cons_pol_antitrump_8, threat_pol_trump,
@@ -168,14 +179,16 @@ clean_data <- wide_data %>%
             qcheck_bfi_trump, qcheck_targ_trump, qcheck2_targ_trump,
             qcheck_targ_nosupport, qcheck2_targ_nosupport,
             opin_pol_lastchance, cons_pol_trump_8)) %>% 
-  filter(qcheck_bfi_anti_total == 1) %>% 
-  filter(qcheck_bfi_trump_total == 1) %>% 
+  filter(qcheck_bfi_anti_total == 1) %>% # only keeping participants who got manipulation check for the bfi anti trump right
+  filter(qcheck_bfi_trump_total == 1) %>% # same as above but for bfi supporting target
+  # putting the qcheck for targets together to avoid NAs, removing NAs, then only keeping correct responses
   pivot_longer(c(qcheck_targ_trump_total, qcheck_targ_anti_total),
                names_to = c("qcheck_question")) %>% 
   mutate_at(vars(value), ~replace(., is.na(.), 99)) %>% 
   filter(value != "99") %>% 
   filter(value == 1) %>% 
-  rename(qcheck_targ = value)
+  rename(qcheck_targ = value) %>% 
+  filter(citizen == 1) # only keeping people who are US citizens
 
   
 #opin_pol: Do you support Trump? 1 = yes; 2 = no; same in follow-up question
@@ -183,4 +196,7 @@ clean_data <- wide_data %>%
 # for qcheck for trump bfi, 1 is correct; originally
 # for qcheck for trump targ, 1 is correct; originally
 # for qcheck for anti targ, 2 is correct; originally
+
+clean_ptcheck <- clean_data %>% 
+  filter(questionable_pt == 1) # only keeping people who completed the PT task correctly
 ```
