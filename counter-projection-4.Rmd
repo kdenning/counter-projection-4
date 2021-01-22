@@ -1,0 +1,59 @@
+---
+title: "Counter Projection 4 Analyses"
+author: "Kathryn Denning"
+date: "1/20/2021"
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+652 participants originally collected from Prolific Academic
+3 had empty data lines = 649 in imported dataset
+
+```{r data prep, echo = FALSE, warning = FALSE, message = FALSE, error = FALSE}
+#loading packages
+library(foreign)
+library(reshape2)
+library(tidyverse)
+library(dplyr)
+library(car)
+library(haven)
+library(psych)
+library(lmerTest)
+library(sjPlot)
+library(reshape2)
+library(data.table)
+library(emmeans)
+library(effects)
+library(Cairo)
+library(tinytex)
+
+#making it round to three decimal places
+options(scipen = 999)
+knitr::opts_knit$set(dev.args = list(type = "cairo"))
+
+#Setting global chunk options
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE)
+
+#importing the data that has been reviewed for completion of PT task
+wide_data <- Import("data_downloaded_January_20_2021.csv", setclass = "tbl_df") 
+```
+
+```{r bot check, echo = FALSE, warning = FALSE, message = FALSE, error = FALSE}
+# Checking if there are any repeat IP addresses that need removed
+bot_check  <- wide_data %>% 
+  select(sub_id, IPAddress)
+
+#identifying the repeat IP addresses
+repeat_ips <- bot_check$IPAddress[duplicated(bot_check$IPAddress)]
+
+# There are none - as expected using Prolific
+```
