@@ -120,6 +120,18 @@ clean_data <- wide_data %>%
   # target per everyday responses and making variables factors or numeric
   mutate(ED_targ_group = (dplyr::recode(ED_targ_group, `TargEDTrump`= "Trump", 
                                    `TargEDAnti`= "Anti")),
+         group_cond = as.factor(ifelse(opin_pol_combined == 1 
+                             & BFI_target_group == "Trump", 
+                             "In-group",
+                             ifelse(opin_pol_combined == 2 
+                                    & BFI_target_group == "Trump", 
+                                    "Out-group",
+                                    ifelse(opin_pol_combined == 1 
+                                           & BFI_target_group == "Anti", 
+                                           "Out-group",
+                                           ifelse(opin_pol_combined == 2 
+                                                  & BFI_target_group == "Anti", 
+                                                  "In-group", NA))))),
          ED_number = as.numeric(ED_number),
          BFI_number = as.numeric(BFI_number),
          ED_targ_group = as.factor(ED_targ_group),
@@ -200,3 +212,295 @@ clean_data <- wide_data %>%
 clean_ptcheck <- clean_data %>% 
   filter(questionable_pt == 1) # only keeping people who completed the PT task correctly
 ```
+
+# Demographics
+
+## Sample Size
+
+```{r n}
+clean_ptcheck %>% 
+  select(sub_id) %>% 
+  unique() %>% 
+  nrow()
+```
+
+```{r n by group cond}
+clean_ptcheck %>% 
+  select(sub_id, group_cond) %>% 
+  unique() %>% 
+  group_by(group_cond) %>% 
+  count()
+
+```
+
+```{r n by group and voting opin}
+clean_ptcheck %>% 
+  select(sub_id, group_cond, opin_pol_combined) %>% 
+  unique() %>% 
+  mutate(opin_pol_combined = dplyr::recode(opin_pol_combined,
+                                    `1` = "Trump supporter",
+                                    `2` = "Anti Trump")) %>% 
+  group_by(group_cond, opin_pol_combined) %>% 
+  count()
+```
+
+```{r gender}
+clean_ptcheck %>% 
+  na.omit() %>% 
+  select(sub_id, gender) %>% 
+  mutate(gender = dplyr::recode(gender, 
+                         `1` = "Male",
+                         `2` = "Female",
+                         `3` = "Other")) %>% 
+  unique() %>% 
+  group_by(gender) %>% 
+  count()
+```
+
+```{r race}
+race_counts <- clean_ptcheck %>% 
+  select(sub_id, race) %>% 
+  na.omit() %>% 
+  mutate(race = dplyr::recode(race, 
+                       `1` = "American Indian/Alaska Native",
+                       `2` = "Asian",
+                       `3` = "Black",
+                       `4` = "Latinx",
+                       `5` = "Middle Eastern/North African",
+                       `6` = "Caucasian",
+                       `7` = "Multiracial",
+                       `8` = "Other")) %>% 
+  unique() %>% 
+  group_by(race) %>% 
+  count()
+
+race_counts %>% 
+  mutate(n_total = sum(race_counts$n),
+    percent = n/n_total*100) %>% 
+  select(-n_total)
+```
+
+```{r age}
+clean_ptcheck %>% 
+  select(sub_id, age) %>% 
+  na.omit() %>% 
+  summarize(mean = mean(age),
+            sd = sd(age))
+```
+
+```{r participant education}
+edu_counts <- clean_ptcheck %>% 
+  select(sub_id, education) %>% 
+  na.omit() %>% 
+  mutate(education = dplyr::recode(education,
+                                     `1` = "Less than high school",
+                                     `2` = "High school graduate",
+                                     `3` = "Some college",
+                                     `4` = "Associate's degree",
+                                     `5` = "Bachelor's degree",
+                                     `6` = "Some graduate school",
+                                     `7` = "Master's degree",
+                                     `8` = "Doctorate or Professional Degree")) %>% 
+  unique() %>% 
+  group_by(education) %>% 
+  count()
+
+edu_counts %>% 
+  mutate(n_total = sum(edu_counts$n),
+    percent = n/n_total*100) %>% 
+  select(-n_total)
+```
+
+```{r parent education}
+pedu_counts <- clean_ptcheck %>% 
+  select(sub_id, parent_education) %>% 
+  na.omit() %>% 
+  mutate(education = dplyr::recode(parent_education,
+                                     `20` = "Less than high school",
+                                     `21` = "High school graduate",
+                                     `22` = "Some college",
+                                     `23` = "Associate's degree",
+                                     `24` = "Bachelor's degree",
+                                     `26` = "Some graduate school",
+                                     `1` = "Master's degree",
+                                     `2` = "Doctorate or Professional Degree")) %>% 
+  unique() %>% 
+  group_by(education) %>% 
+  count()
+
+pedu_counts %>% 
+  mutate(n_total = sum(edu_counts$n),
+    percent = n/n_total*100) %>% 
+  select(-n_total)
+```
+
+```{r birth country}
+# All are US citizens in this current study
+clean_ptcheck %>% 
+  select(sub_id, country_birth) %>% 
+  na.omit() %>% 
+  mutate(country_birth = dplyr::recode(country_birth,
+                                      `1` = "US born",
+                                      `2` = "Foreign born")) %>% 
+  unique() %>% 
+  group_by(country_birth) %>% 
+  count()
+```
+
+```{r country raised}
+# All are US citizens in this current study
+clean_ptcheck %>% 
+  select(sub_id, country_raised) %>% 
+  na.omit() %>% 
+  mutate(country_raised = dplyr::recode(country_raised,
+                                      `1` = "US raised",
+                                      `2` = "Foreign raised")) %>% 
+  unique() %>% 
+  group_by(country_raised) %>% 
+  count()
+```
+
+```{r native language}
+# All are US citizens in this current study
+clean_ptcheck %>% 
+  select(sub_id, native_language) %>% 
+  na.omit() %>% 
+  mutate(native_language = dplyr::recode(native_language,
+                                      `1` = "English",
+                                      `2` = "Foreign language")) %>% 
+  unique() %>% 
+  group_by(native_language) %>% 
+  count()
+```
+
+## Overall political leaning
+
+Question: Overall, where would you place yourself, on the following scale of liberalism to conservatism?
+1 indicates "Very liberal" and 5 indicates "Very conservative"
+
+Across condition:
+
+```{r histo of overall political leanings}
+hist_pol_overall <- clean_ptcheck %>% 
+  select(sub_id, poli_orient_1) %>% 
+  unique()
+
+hist(hist_pol_overall$poli_orient_1)
+```
+
+In-group condition:
+
+```{r histo of overall political leanings in-group}
+hist_pol_overall_in <- clean_ptcheck %>% 
+  filter(group_cond == "In-group") %>% 
+  select(sub_id, poli_orient_1) %>% 
+  unique()
+
+hist(hist_pol_overall_in$poli_orient_1)
+```
+
+Out-group condition:
+
+```{r histo of overall political leanings out-group}
+hist_pol_overall_out <- clean_ptcheck %>% 
+  filter(group_cond == "Out-group") %>% 
+  select(sub_id, poli_orient_1) %>% 
+  unique()
+
+hist(hist_pol_overall_out$poli_orient_1)
+```
+
+## Social political leaning
+
+Question: In terms of social and cultural issues (e.g., abortion, separation of church and state, affirmative action), where would you place yourself on the following scale? 
+1 indicates "Very liberal" and 5 indicates "Very conservative"
+
+Across condition:
+
+```{r histo of social political leanings}
+hist_pol_social <- clean_ptcheck %>% 
+  select(sub_id, poli_orient_2) %>% 
+  unique()
+
+hist(hist_pol_social$poli_orient_2)
+```
+
+In-group condition:
+
+```{r histo of social political leanings in-group}
+hist_pol_social_in <- clean_ptcheck %>% 
+  filter(group_cond == "In-group") %>% 
+  select(sub_id, poli_orient_2) %>% 
+  unique()
+
+hist(hist_pol_social_in$poli_orient_2)
+```
+
+Out-group condition:
+
+```{r histo of social political leanings out-group}
+hist_pol_social_out <- clean_ptcheck %>% 
+  filter(group_cond == "Out-group") %>% 
+  select(sub_id, poli_orient_2) %>% 
+  unique()
+
+hist(hist_pol_social_out$poli_orient_2)
+```
+
+## Economic political leaning
+
+Question: In terms of economic issues (e.g., taxation, welfare, privatization of social security), where would you place yourself on the following scale? 
+1 indicates "Very liberal" and 5 indicates "Very conservative"
+
+Across condition:
+
+```{r histo of social political leanings}
+hist_pol_econ <- clean_ptcheck %>% 
+  select(sub_id, poli_orient_3) %>% 
+  unique()
+
+hist(hist_pol_econ$poli_orient_3)
+```
+
+In-group condition:
+
+```{r histo of social political leanings in-group}
+hist_pol_econ_in <- clean_ptcheck %>% 
+  filter(group_cond == "In-group") %>% 
+  select(sub_id, poli_orient_3) %>% 
+  unique()
+
+hist(hist_pol_econ_in$poli_orient_3)
+```
+
+Out-group condition:
+
+```{r histo of social political leanings out-group}
+hist_pol_econ_out <- clean_ptcheck %>% 
+  filter(group_cond == "Out-group") %>% 
+  select(sub_id, poli_orient_3) %>% 
+  unique()
+
+hist(hist_pol_econ_out$poli_orient_3)
+```
+
+## House control knowledge
+
+Question: Which party has the most members in the U.S. House of Representatives in Washington, D.C.?
+
+*This data was collected in October 2020, when the House was Democratic*
+
+```{r house correct}
+clean_ptcheck %>% 
+  select(sub_id, house_most_members) %>% 
+  na.omit() %>% 
+  unique() %>% 
+  mutate(house_most_members = dplyr::recode(house_most_members,
+                                            `2` = "Democrat control",
+                                            `6` = "Republican control",
+                                            `3` = "Do not know")) %>% 
+  group_by(house_most_members) %>% 
+  count()
+```
+
+This question shows that 114 people answered incorrectly and 104 did not know. Political knowledge and extreme political beliefs (how liberal or conservative someone is) could impact results and could be used as an exploratory moderator.
