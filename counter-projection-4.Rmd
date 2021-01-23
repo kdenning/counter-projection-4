@@ -200,9 +200,15 @@ clean_data <- wide_data %>%
   filter(value != "99") %>% 
   filter(value == 1) %>% 
   rename(qcheck_targ = value) %>% 
-  filter(citizen == 1) # only keeping people who are US citizens
+  filter(citizen == 1)  %>% # only keeping people who are US citizens
+  mutate(perceive_polar = abs(polar_lib - polar_cons)) %>% #getting variable for perceived polar
+  # centering predictors - will wait to center exploratory predictors until after EFA
+  mutate(selfBFI_c = selfBFI - mean(selfBFI, na.rm = TRUE),
+         selfED_c = selfED - mean(selfED, na.rm = TRUE),
+         stereoBFI_c = stereoBFI - mean(stereoBFI, na.rm = TRUE),
+         stereoED_c = stereoED - mean(stereoED, na.rm = TRUE),
+         identification_c = identification - mean(identification, na.rm = TRUE))
 
-  
 #opin_pol: Do you support Trump? 1 = yes; 2 = no; same in follow-up question
 # for qcheck not support bfi, 2 is correct; originally
 # for qcheck for trump bfi, 1 is correct; originally
@@ -224,6 +230,10 @@ clean_ptcheck %>%
   nrow()
 ```
 
+## N per conditions
+
+### In/out-group only
+
 ```{r n by group cond}
 clean_ptcheck %>% 
   select(sub_id, group_cond) %>% 
@@ -232,6 +242,8 @@ clean_ptcheck %>%
   count()
 
 ```
+
+### In/out-group & voting opinion
 
 ```{r n by group and voting opin}
 clean_ptcheck %>% 
@@ -243,6 +255,8 @@ clean_ptcheck %>%
   group_by(group_cond, opin_pol_combined) %>% 
   count()
 ```
+
+## Gender
 
 ```{r gender}
 clean_ptcheck %>% 
@@ -256,6 +270,8 @@ clean_ptcheck %>%
   group_by(gender) %>% 
   count()
 ```
+
+## Race
 
 ```{r race}
 race_counts <- clean_ptcheck %>% 
@@ -280,6 +296,8 @@ race_counts %>%
   select(-n_total)
 ```
 
+## Age
+
 ```{r age}
 clean_ptcheck %>% 
   select(sub_id, age) %>% 
@@ -287,6 +305,8 @@ clean_ptcheck %>%
   summarize(mean = mean(age),
             sd = sd(age))
 ```
+
+## Education
 
 ```{r participant education}
 edu_counts <- clean_ptcheck %>% 
@@ -311,6 +331,8 @@ edu_counts %>%
   select(-n_total)
 ```
 
+## Parent Education
+
 ```{r parent education}
 pedu_counts <- clean_ptcheck %>% 
   select(sub_id, parent_education) %>% 
@@ -334,6 +356,10 @@ pedu_counts %>%
   select(-n_total)
 ```
 
+## Birth country
+
+*All participants are US citizens.*
+
 ```{r birth country}
 # All are US citizens in this current study
 clean_ptcheck %>% 
@@ -347,6 +373,8 @@ clean_ptcheck %>%
   count()
 ```
 
+## Country raised in
+
 ```{r country raised}
 # All are US citizens in this current study
 clean_ptcheck %>% 
@@ -359,6 +387,8 @@ clean_ptcheck %>%
   group_by(country_raised) %>% 
   count()
 ```
+
+## Native language
 
 ```{r native language}
 # All are US citizens in this current study
@@ -378,7 +408,7 @@ clean_ptcheck %>%
 Question: Overall, where would you place yourself, on the following scale of liberalism to conservatism?
 1 indicates "Very liberal" and 5 indicates "Very conservative"
 
-Across condition:
+### Across condition:
 
 ```{r histo of overall political leanings}
 hist_pol_overall <- clean_ptcheck %>% 
@@ -388,7 +418,7 @@ hist_pol_overall <- clean_ptcheck %>%
 hist(hist_pol_overall$poli_orient_1)
 ```
 
-In-group condition:
+### In-group condition:
 
 ```{r histo of overall political leanings in-group}
 hist_pol_overall_in <- clean_ptcheck %>% 
@@ -399,7 +429,7 @@ hist_pol_overall_in <- clean_ptcheck %>%
 hist(hist_pol_overall_in$poli_orient_1)
 ```
 
-Out-group condition:
+### Out-group condition:
 
 ```{r histo of overall political leanings out-group}
 hist_pol_overall_out <- clean_ptcheck %>% 
@@ -415,7 +445,7 @@ hist(hist_pol_overall_out$poli_orient_1)
 Question: In terms of social and cultural issues (e.g., abortion, separation of church and state, affirmative action), where would you place yourself on the following scale? 
 1 indicates "Very liberal" and 5 indicates "Very conservative"
 
-Across condition:
+### Across condition:
 
 ```{r histo of social political leanings}
 hist_pol_social <- clean_ptcheck %>% 
@@ -425,7 +455,7 @@ hist_pol_social <- clean_ptcheck %>%
 hist(hist_pol_social$poli_orient_2)
 ```
 
-In-group condition:
+### In-group condition:
 
 ```{r histo of social political leanings in-group}
 hist_pol_social_in <- clean_ptcheck %>% 
@@ -436,7 +466,7 @@ hist_pol_social_in <- clean_ptcheck %>%
 hist(hist_pol_social_in$poli_orient_2)
 ```
 
-Out-group condition:
+### Out-group condition:
 
 ```{r histo of social political leanings out-group}
 hist_pol_social_out <- clean_ptcheck %>% 
@@ -452,9 +482,9 @@ hist(hist_pol_social_out$poli_orient_2)
 Question: In terms of economic issues (e.g., taxation, welfare, privatization of social security), where would you place yourself on the following scale? 
 1 indicates "Very liberal" and 5 indicates "Very conservative"
 
-Across condition:
+### Across condition:
 
-```{r histo of social political leanings}
+```{r histo of econ political leanings}
 hist_pol_econ <- clean_ptcheck %>% 
   select(sub_id, poli_orient_3) %>% 
   unique()
@@ -462,9 +492,9 @@ hist_pol_econ <- clean_ptcheck %>%
 hist(hist_pol_econ$poli_orient_3)
 ```
 
-In-group condition:
+### In-group condition:
 
-```{r histo of social political leanings in-group}
+```{r histo of econ political leanings in-group}
 hist_pol_econ_in <- clean_ptcheck %>% 
   filter(group_cond == "In-group") %>% 
   select(sub_id, poli_orient_3) %>% 
@@ -473,9 +503,9 @@ hist_pol_econ_in <- clean_ptcheck %>%
 hist(hist_pol_econ_in$poli_orient_3)
 ```
 
-Out-group condition:
+### Out-group condition:
 
-```{r histo of social political leanings out-group}
+```{r histo of econ political leanings out-group}
 hist_pol_econ_out <- clean_ptcheck %>% 
   filter(group_cond == "Out-group") %>% 
   select(sub_id, poli_orient_3) %>% 
@@ -504,3 +534,77 @@ clean_ptcheck %>%
 ```
 
 This question shows that 114 people answered incorrectly and 104 did not know. Political knowledge and extreme political beliefs (how liberal or conservative someone is) could impact results and could be used as an exploratory moderator.
+
+```{r}
+clean_ptcheck %>% 
+  select(sub_id, BFI_number, BFI_target_group, TargBFI, selfBFI_c, group_cond, 
+         opin_pol_combined)  %>% 
+  unique() %>% 
+  count()
+
+# how unique numbers of datapoints change when we remove na's in long-format
+clean_ptcheck %>% 
+  select(sub_id, BFI_number, BFI_target_group, TargBFI, selfBFI_c, group_cond, 
+         opin_pol_combined)  %>% 
+  na.omit() %>% 
+  unique() %>% 
+  count()
+```
+
+# Pre-registered Model 1: Projection predicted by group
+
+```{r model 1}
+model1_data <- clean_ptcheck %>% 
+  select(sub_id, BFI_number, BFI_target_group, TargBFI, selfBFI_c, group_cond, 
+         opin_pol_combined) %>% 
+  na.omit() %>% 
+  unique()
+
+model1 <- lmer(TargBFI ~ selfBFI_c*group_cond + (selfBFI_c|sub_id),
+               data = model1_data)
+summary(model1)
+```
+
+```{r Model 1 interaction plot}
+ggplot(clean_ptcheck, aes(selfBFI_c, TargBFI, group = group_cond)) +
+  geom_smooth(method = "lm", 
+              se = FALSE, 
+              size = .7, 
+              colour = "black", 
+              aes(linetype = group_cond)) +
+  theme_minimal(base_size = 13) +
+  theme(legend.key.size = unit(1, "cm")) +
+  labs(title = "Main effect of target group on projection",
+         x = "Personality responses for self",
+         y = "Personality responses for target") +
+  theme(legend.title = element_blank())
+```
+
+We replicate our prior finding that people counter project with their political out-group, but project positively with their political in-group target.
+
+# Pre-registered Model 2: Stereotyping as outcome
+
+# Pre-registered Model 3: Stereotyping as moderator
+
+```{r model 3}
+model3_data <- clean_ptcheck %>% 
+  select(sub_id, BFI_number, BFI_target_group, TargBFI, selfBFI_c, group_cond, 
+         opin_pol_combined, stereoBFI_c) %>% 
+  na.omit() %>% 
+  unique()
+
+model3 <- lmer(TargBFI ~ selfBFI_c*group_cond*stereoBFI_c + (selfBFI_c|sub_id),
+               data = model3_data)
+summary(model3)
+```
+
+The main effect of selfBFI_c:group_condOut-group did not disappear when including stereotyping as a moderator, replicating the exploratory results from Study 1 (my FYP), and there was no interaction of stereotyping*target group on projection. However, there is a three-way interaction that we need to consider. Lets look at plots below of the three-way interaction.
+
+
+
+*Added to Model 1*
+
+# Pre-registered Model 4: In-group identification as moderator
+
+*Added to Model 1*
+
