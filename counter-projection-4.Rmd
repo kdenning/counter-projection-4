@@ -553,17 +553,28 @@ clean_ptcheck %>%
 
 # Pre-registered Model 1: Projection predicted by group
 
-```{r model 1}
+```{r model 1 data}
 model1_data <- clean_ptcheck %>% 
   select(sub_id, BFI_number, BFI_target_group, TargBFI, selfBFI_c, group_cond, 
          opin_pol_combined) %>% 
   na.omit() %>% 
   unique()
+```
 
+**Getting effects coding for target group:**
+
+```{r}
+contrasts(model1_data$group_cond) <- contr.sum(2)
+contrasts(model1_data$group_cond)
+````
+
+```{r model 1 results}
 model1 <- lmer(TargBFI ~ selfBFI_c*group_cond + (selfBFI_c|sub_id),
                data = model1_data)
 summary(model1)
 ```
+
+## Plot: Main effect target group
 
 ```{r Model 1 interaction plot}
 ggplot(clean_ptcheck, aes(selfBFI_c, TargBFI, group = group_cond)) +
@@ -573,11 +584,11 @@ ggplot(clean_ptcheck, aes(selfBFI_c, TargBFI, group = group_cond)) +
               colour = "black", 
               aes(linetype = group_cond)) +
   theme_minimal(base_size = 13) +
-  theme(legend.key.size = unit(1, "cm")) +
+  theme(legend.key.size = unit(1, "cm"),
+        legend.title = element_blank()) +
   labs(title = "Main effect of target group on projection",
          x = "Personality responses for self",
-         y = "Personality responses for target") +
-  theme(legend.title = element_blank())
+         y = "Personality responses for target")
 ```
 
 We replicate our prior finding that people counter project with their political out-group, but project positively with their political in-group target.
@@ -586,23 +597,100 @@ We replicate our prior finding that people counter project with their political 
 
 # Pre-registered Model 3: Stereotyping as moderator
 
-```{r model 3}
+**Added stereotyping to Model 1 to see if it adding it changed counter projection.**
+
+```{r model 3 data}
 model3_data <- clean_ptcheck %>% 
   select(sub_id, BFI_number, BFI_target_group, TargBFI, selfBFI_c, group_cond, 
          opin_pol_combined, stereoBFI_c) %>% 
   na.omit() %>% 
   unique()
+```
 
+**Getting effects coding for target group:**
+
+```{r contrast codes model 3}
+contrasts(model3_data$group_cond) <- contr.sum(2)
+contrasts(model3_data$group_cond)
+```
+
+```{r model 3 results}
 model3 <- lmer(TargBFI ~ selfBFI_c*group_cond*stereoBFI_c + (selfBFI_c|sub_id),
                data = model3_data)
 summary(model3)
 ```
 
-The main effect of selfBFI_c:group_condOut-group did not disappear when including stereotyping as a moderator, replicating the exploratory results from Study 1 (my FYP), and there was no interaction of stereotyping*target group on projection. However, there is a three-way interaction that we need to consider. Lets look at plots below of the three-way interaction.
+The main effect of selfBFI_c:group_condOut-group did not disappear when including stereotyping as a moderator, replicating the exploratory results from Study 1 (my FYP), and there was no interaction of stereotyping*target group on projection. However, there is a three-way interaction that we need to consider, and we need to consider how the plots look.
+
+## Plot: stereo * group interaction
+
+```{r model 3 interaction with stereo prep}
+describe(model3_data$stereoBFI_c)
+
+mod3_proj_stereo_effects <- effect(term = "selfBFI_c:group_cond:stereoBFI_c", 
+                           xlevels = list(group_cond = c("In-group", "Out-group"), 
+                                         stereoBFI_c = c(-1.22, 0, 1.22)), 
+                           mod = model3)
+
+mod3_proj_stereo_effects <- as.data.frame(mod3_proj_stereo_effects)
+
+mod3_proj_stereo_effects$Stereotyping <- as.factor(mod3_proj_stereo_effects$stereoBFI_c)
 
 
+stereo_label <- c("-1.22" = "Low stereotyping \n (1 SD below)", 
+                 "0" = "Average stereotyping",
+                 "1.22" = "High stereotyping  \n(1 SD above)")
+```
 
-*Added to Model 1*
+```{r model 3 interaction plot with stereo}
+ggplot(mod3_proj_stereo_effects, aes(selfBFI_c, 
+                                     fit, 
+                                     group = group_cond,
+                                     colour = group_cond)) +
+  geom_smooth(method = "lm", se = FALSE, size = .7, colour = "black",
+              aes(linetype = group_cond)) +
+  facet_grid(cols = vars(Stereotyping),
+             labeller = labeller(Stereotyping = stereo_label)) +
+  theme_minimal() +
+  theme(legend.title = element_blank()) +
+  labs(title = "Projection predicted by stereotype use and group membership",
+       x = "Personality traits for self",
+       y = "Personality traits for target")
+```
+
+It appears that as stereotype use increases, the intercept for projection for both in-group and out-group increases and the difference between groups increases as well. People are projecting more for their in-group when they stereotype the least, but also appear to be projecting less with their out-group in that same condition, though the slopes for projection are much flatter. There are no flat or negative slopes for out-group projection in this plot. 
+
+Though not as supportive as I was hoping, I do think it is supportive that - when looking from low to high stereotyping - there is a change in slope and that the slope is flatter in the low stereotyping condition. *This* result indicates that *less projection* is opposite of more stereotyping.
+
+## Plot: Main effect group
+
+```{r model 3 prep main effect group}
+describe(model3_data$stereoBFI_c)
+
+mod3_proj_group <- effect(term = "selfBFI_c:group_cond", 
+                           xlevels = list(group_cond = c("In-group", "Out-group")), 
+                           mod = model3)
+
+mod3_proj_group <- as.data.frame(mod3_proj_group)
+```
+
+```{r Model 3 main effect group plot}
+ggplot(mod3_proj_group, aes(selfBFI_c, fit, group = group_cond)) +
+  geom_smooth(method = "lm", 
+              se = FALSE, 
+              size = .7, 
+              colour = "black", 
+              aes(linetype = group_cond)) +
+  theme_minimal(base_size = 13) +
+  theme(legend.key.size = unit(1, "cm"),
+        legend.title = element_blank()) +
+  labs(title = "Main effect of target group on projection",
+       subtitle = "Controlling for stereotyping",
+         x = "Personality responses for self",
+         y = "Personality responses for target")
+```
+
+When controlling for stereotyping, the counter projection found earlier does disappear.
 
 # Pre-registered Model 4: In-group identification as moderator
 
