@@ -595,6 +595,50 @@ We replicate our prior finding that people counter project with their political 
 
 # Pre-registered Model 2: Stereotyping as outcome
 
+```{r model 2 data}
+model2_data <- clean_ptcheck %>% 
+  select(sub_id, BFI_number, BFI_target_group, stereoBFI, selfBFI_c, group_cond, 
+         opin_pol_combined) %>% 
+  na.omit() %>% 
+  unique()
+```
+
+**Getting effects coding for target group:**
+
+```{r model 2 contrasts}
+contrasts(model2_data$group_cond) <- contr.sum(2)
+contrasts(model2_data$group_cond)
+````
+
+## Results
+
+```{r model 2 results}
+model2 <- lm(stereoBFI ~ group_cond,
+               data = model2_data)
+summary(model2)
+```
+
+## Plot: MAin effect target group
+
+```{r}
+mod2_plotdata <- effect(term = "group_cond", 
+                           xlevels = list(group_cond = c("In-group", "Out-group")), 
+                           mod = model2)
+
+mod2_plotdata <- as.data.frame(mod2_plotdata)
+```
+
+```{r model 2 plot}
+ggplot(mod2_plotdata, aes(group_cond, fit)) +
+  geom_col() +
+  theme_minimal() +
+  labs(title = "Effect of target group on stereotyping",
+       subtitle = "Stereotyping measured by ratings on BFI for stereotypical group member",
+       x = "Target group",
+       y = "Stereotyping")
+
+```
+
 # Pre-registered Model 3: Stereotyping as moderator
 
 **Added stereotyping to Model 1 to see if it adding it changed counter projection.**
