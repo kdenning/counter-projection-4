@@ -757,16 +757,18 @@ contrasts(model2_data$group_cond) <- contr.sum(2)
 contrasts(model2_data$group_cond)
 ````
 
-## Results
+## Model using BFI
 
-```{r model 2 results}
+### Results
+
+```{r model 2 BFI results}
 model2 <- lmer(TargBFI ~ stereoBFI_c*group_cond + (stereoBFI_c|sub_id),
                data = model2_data)
 
 summary(model2)
 ```
 
-## Plot: Main effect target group
+### Plot: Main effect target group
 
 ```{r}
 describe(model2_data$stereoBFI_c)
@@ -797,6 +799,68 @@ ggplot(mod2_plotdata, aes(stereoBFI_c, fit, group = group_cond)) +
 ```
 
 People stereotype their in-group more than the out-group on the BFI.
+
+## Model using Everyday Likes
+
+```{r model 2 ED data}
+model2ED_data <- clean_ptcheck %>% 
+  select(sub_id, ED_number, TargED, stereoED_c, 
+         group_cond, opin_pol_combined) %>% 
+  na.omit() %>% 
+  unique()
+```
+
+```{r model 2 ED results}
+model2ED <- lmer(TargED ~ stereoED_c*group_cond + (stereoED_c|sub_id),
+               data = model2ED_data)
+
+summary(model2ED)
+```
+
+Stereotyping for the target does not interact with group like projection did.
+
+## Model using ED + BFI
+
+```{r model 2 EDBFI results}
+model2EDBFI <- lmer(Targ ~ stereo_c*group_cond + (stereo_c|sub_id),
+               data = EDBFI_data)
+
+summary(model2EDBFI)
+```
+
+When combined, group still does interact with EDBFI to demonstrate stereotyping of the target.
+
+### Plot: Main effect target group
+
+```{r model 2 EDBFI plot prep}
+describe(EDBFI_data$stereo_c)
+
+mod2EDBFI_plotdata <- effect(term = "stereo_c:group_cond", 
+                           xlevels = list(group_cond = c("In-group", 
+                                                         "Out-group"),
+                                          stereo_c = c(-1.18, 0, 1.18)), 
+                           mod = model2EDBFI)
+
+mod2EDBFI_plotdata <- as.data.frame(mod2EDBFI_plotdata)
+```
+
+```{r model 2 plot EDBFI}
+ggplot(mod2EDBFI_plotdata, aes(stereo_c, fit, group = group_cond)) +
+  geom_smooth(method = "lm", 
+              se = FALSE, 
+              size = .7, 
+              colour = "black", 
+              aes(linetype = group_cond)) +
+  theme_minimal() +
+  labs(title = "Plot from Model 2: Effect of target group on stereotyping",
+       subtitle = "Higher correspondence between BFI + ED ratings indicates more stereotyping",
+       y = "BFI + ED ratings for target",
+       x = "BFI + ED ratings for stereotypical group member") +
+   theme(legend.title = element_blank())
+
+```
+
+Same as just the BFI plot, people stereotype their in-group more than their out-group. However, the slope for out-group stereotyping is steeper, indicating that adding everyday likes items increases out-group stereotyping.
 
 # Pre-registered Model 3: Stereotyping as moderator
 
