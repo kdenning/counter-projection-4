@@ -622,11 +622,9 @@ We replicate our prior finding that people counter project with their political 
 
 ## Projection using Everyday Likes (ED)
 
-## Projection using BFI
-
 ```{r model 1 ED data}
 model1ED_data <- clean_ptcheck %>% 
-  select(sub_id, BFI_number, BFI_target_group, TargED, selfED_c, group_cond, 
+  select(sub_id, ED_number, TargED, selfED_c, group_cond, 
          opin_pol_combined) %>% 
   na.omit() %>% 
   unique()
@@ -639,7 +637,7 @@ contrasts(model1ED_data$group_cond) <- contr.sum(2)
 contrasts(model1ED_data$group_cond)
 ````
 
-```{r model 1 results}
+```{r model 1 ED results}
 model1ED <- lmer(TargED ~ selfED_c*group_cond + (selfED_c|sub_id),
                data = model1ED_data)
 summary(model1ED)
@@ -655,7 +653,7 @@ mod1ED_proj_group <- effect(term = "selfED_c:group_cond",
 mod1ED_proj_group <- as.data.frame(mod1ED_proj_group)
 ```
 
-```{r Model 1 main effect group plot}
+```{r Model 1 ED main effect group plot}
 ggplot(mod1ED_proj_group, aes(selfED_c, fit, group = group_cond)) +
   geom_smooth(method = "lm", 
               se = FALSE, 
@@ -671,7 +669,78 @@ ggplot(mod1ED_proj_group, aes(selfED_c, fit, group = group_cond)) +
          y = "Everyday likes for target")
 ```
 
-# Pre-registered Model 2: Stereotyping as outcome
+## Projection using BFI + ED combined
+
+```{r data prep for combined EDBFI models}
+EDBFI_data <- clean_ptcheck %>% 
+  select(sub_id, ED_number, BFI_target_group, TargED, selfED, group_cond, 
+         opin_pol_combined, BFI_number, selfBFI, TargBFI, 
+         stereoBFI, stereoED) %>% 
+  na.omit() %>% 
+  unique() %>% 
+  rename(self_BFI = selfBFI,
+         self_ED = selfED,
+         Targ_ED = TargED,
+         Targ_BFI = TargBFI,
+         stereo_BFI = stereoBFI,
+         stereo_ED = stereoED) %>% 
+  pivot_longer(c(self_BFI, self_ED, Targ_ED, Targ_BFI, stereo_BFI, stereo_ED),
+               names_sep = "_",
+               names_to = c("EDBFI_groups", "EDBFI_scale")) %>% 
+  pivot_wider(names_from = EDBFI_groups, values_from = value) %>% 
+  mutate(ED_number = as.numeric(dplyr::recode(ED_number,
+                                   `1` = "20",
+                                   `2` = "21",
+                                   `3` = "22",
+                                   `4` = "23",
+                                   `5` = "24")),
+         EDBFI_number = ifelse(EDBFI_scale == "BFI", BFI_number,
+                               ifelse(EDBFI_scale == "ED", ED_number, NA))) %>% 
+  select(-c(ED_number, BFI_number, EDBFI_scale)) %>% 
+  unique() %>% 
+  mutate(self_c = self - mean(self, na.rm = TRUE),
+         stereo_c = stereo - mean(stereo, na.rm = TRUE))
+```
+
+```{r model 1 EDBFI contrasts}
+contrasts(EDBFI_data$group_cond) <- contr.sum(2)
+contrasts(EDBFI_data$group_cond)
+````
+
+```{r model 1 EDBFI results}
+model1EDBFI <- lmer(Targ ~ self_c*group_cond + (self_c|sub_id),
+               data = EDBFI_data)
+summary(model1EDBFI)
+```
+
+### Plot: Main effect target group
+
+```{r model 1 EDBFI prep main effect group}
+mod1EDBFI_proj_group <- effect(term = "self_c:group_cond", 
+                           xlevels = list(group_cond = c("In-group", "Out-group")), 
+                           mod = model1EDBFI)
+
+mod1EDBFI_proj_group <- as.data.frame(mod1EDBFI_proj_group)
+```
+
+```{r Model 1 EDBFI main effect group plot}
+ggplot(mod1EDBFI_proj_group, aes(self_c, fit, group = group_cond)) +
+  geom_smooth(method = "lm", 
+              se = FALSE, 
+              size = .7, 
+              colour = "black", 
+              aes(linetype = group_cond)) +
+  theme_minimal(base_size = 13) +
+  theme(legend.key.size = unit(1, "cm"),
+        legend.title = element_blank()) +
+  labs(title = "Plot from Model 1: Main effect of target group on projection",
+       subtitle = "Projection using 'Everyday Likes' + BFI items",
+         x = "ED + BFI items for self",
+         y = "ED + BFI items for target")
+```
+
+
+# Pre-registered Model 2: Stereotyping predicted by group
 
 ```{r model 2 data}
 model2_data <- clean_ptcheck %>% 
