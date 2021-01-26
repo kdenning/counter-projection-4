@@ -933,15 +933,83 @@ Interestingly, we did not find an interaction of stereotyping with projection in
 
 **We will use the combined ED + BFI dataset as pre-registered because the results from the original BFI do not appear that different.**
 
+```{r model 3 EDBFI no stereo results}
+model3EDBFI_nostereo <- lmer(Targ ~ group_cond*self_c*identification_c + (self_c|sub_id),
+               data = EDBFI_data)
 
+summary(model3EDBFI_nostereo)
+```
 
+### Plot: Int target group & identification on projection
 
+```{r model 3 no stereo group by ident plot prep}
+describe(EDBFI_data$identification_c)
 
+mod3nostereo_proj_ident_effects <- effect(term = "group_cond:self_c:identification_c", 
+                           xlevels = list(group_cond = c("In-group", 
+                                                         "Out-group"), 
+                                         identification_c = c(-1.27, 0, 1.27)), 
+                           mod = model3EDBFI_nostereo)
 
+mod3nostereo_proj_ident_effects <- as.data.frame(mod3nostereo_proj_ident_effects)
+
+mod3nostereo_proj_ident_effects %<>% 
+  mutate(Identification = as.factor(identification_c),
+         Identification = dplyr::recode(Identification,
+                                         `-1.27` = "Low Identification",
+                                         `0` = "Average Identification",
+                                         `1.27` = "High Identificaiton"))
+```
+
+```{r model 3 no stereo group by ident plot}
+ggplot(mod3nostereo_proj_ident_effects, aes(self_c, 
+                                     fit, 
+                                     group = group_cond,
+                                     colour = group_cond)) +
+  geom_smooth(method = "lm", se = FALSE, size = .7, colour = "black",
+              aes(linetype = group_cond)) +
+  facet_grid(cols = vars(Identification)) +
+  theme_minimal() +
+  theme(legend.title = element_blank()) +
+  labs(title = "Pre-reg Model 3: Projection by identification and group membership",
+       subtitle = "Stereotyping removed for power",
+       x = "ED + BFI for self",
+       y = "ED + BFI for target")
+```
+
+As identification increases, out-group counter projection increases as well as in-group projection.
+
+### Plot: ME target group
+
+```{r model 3 no stereo EDBFI prep main effect group}
+mod3EDBFI_nostereo_proj_group <- effect(term = "group_cond:self_c", 
+                           xlevels = list(group_cond = c("In-group", "Out-group")), 
+                           mod = model3EDBFI_nostereo)
+
+mod3EDBFI_nostereo_proj_group <- as.data.frame(mod3EDBFI_nostereo_proj_group)
+```
+
+```{r Model 3 no stereo EDBFI main effect group plot}
+ggplot(mod3EDBFI_nostereo_proj_group, aes(self_c, fit, group = group_cond)) +
+  geom_smooth(method = "lm", 
+              se = FALSE, 
+              size = .7, 
+              colour = "black", 
+              aes(linetype = group_cond)) +
+  theme_minimal(base_size = 13) +
+  theme(legend.key.size = unit(1, "cm"),
+        legend.title = element_blank()) +
+  labs(title = "Model 3: Main effect of target group on projection",
+       subtitle = "Using 'Everyday Likes' + BFI items controlling for stereotyping",
+         x = "ED + BFI items for self",
+         y = "ED + BFI items for target")
+```
+
+Without stereotyping but including everyday likes and BFI, we see counter projection for out-group targets and regular projection for in-group targets.
 
 ## Exploratory: W/ stereotyping
 
-```{r model 4 EDBFI results}
+```{r model 3 EDBFI results}
 model4EDBFI <- lmer(Targ ~ stereo_c*group_cond*self_c*identification_c + (self_c|sub_id),
                data = EDBFI_data)
 
@@ -1006,8 +1074,10 @@ ggplot(mod4EDBFI_projplotdata, aes(self_c, fit, group = group_cond)) +
    theme(legend.title = element_blank())
 ```
 
-Both projection and stereotyping plots are the same as the results from Model 3 using ED and BFI, indicating that adding identification into the model with the combined scales had not impact on the main effects of projection and stereoyping by group.
+Both projection and stereotyping plots are the same as the results from Model 3 using ED and BFI, indicating that adding identification into the model with the combined scales had not impact on the main effects of projection and stereotyping by group.
+
+In comparison to the Pre-reg Model 3 without stereotyping, adding stereotyping does lessen counter projection with out-groups to a flatter line.
 
 # Exp Model 4 from Pre-reg
 
-
+To be completed
