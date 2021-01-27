@@ -1217,15 +1217,45 @@ High identifiers respond more extremely about stereotypical responses than low i
 
 # EFA for ED + BFI data
 
-```{r}
-EDBFI_EFA <- EDBFI_overall %>% 
-  select(sub_id, identification, threat, perceive_polar, fundaMoral, contentiousness) %>% 
+https://cran.r-project.org/web/packages/parameters/vignettes/efa_cfa.html
+
+**Should we run an EFA? Is our data applicable?**
+
+```{r EFA check}
+EFA <- EDBFI_overall %>% 
+  select(identification, threat, perceive_polar, fundaMoral, contentiousness) %>% 
   unique()
 
-EFA <- clean_ptcheck %>% 
-  select(sub_id, identification, threat, perceive_polar, fundaMoral, contentiousness) %>%
- unique()
 
-# Check factor structure
-check_factorstructure(data)
+# Check factor structure to see if there is enough correlation, etc. for factor analysis
+check_factorstructure(EFA)
 ```
+
+These tests say yes!
+
+```{r EFA n factor check}
+factors_exp <- n_factors(EFA)
+factors_exp
+
+as.data.frame(factors_exp)
+summary(factors_exp)
+```
+
+The majority of tests suggest only 1 factor, followed by 2 latent factors. 2 latent factors may make more theoretical sense for our data, but we will look at both.
+
+```{r EFAs}
+efa_1fac <- psych::fa(EFA, nfactors = 1) %>% 
+  model_parameters(sort = TRUE, threshold = "max")
+efa_1fac
+
+efa_2fac <- psych::fa(EFA, nfactors = 2) %>% 
+  model_parameters(sort = TRUE, threshold = "max")
+efa_2fac
+
+efa_3fac <- psych::fa(EFA, nfactors = 3) %>% 
+  model_parameters(sort = TRUE, threshold = "max")
+efa_3fac
+```
+
+The EFA with 2 factors explains more of the total variance of the original data. Just for fun, I also tried 3 factors, and it worsened the explanation and none of the variables were used in the third factor. It appears that the 2 factor structure is our best structure. This structure also combines threat & contentiousness into one factor and fundamental morals, identification, and perceived polarization into another factor. These factors seem to fall into two separate categories: (1) Aggression, (2) Group beliefs.
+
