@@ -676,12 +676,40 @@ ggplot(mod2ED_proj_group, aes(selfED_c, fit, group = group_cond)) +
 ### ED w/ stereotyping in model
 
 ```{r model 2 ED results, warning = FALSE, message = FALSE, error = FALSE}
-model2ED <- lmer(TargED ~ selfED_c*group_cond*stereoED_c + (selfED_c|sub_id),
+model2EDwstereo <- lmer(TargED ~ selfED_c*group_cond*stereoED_c + (1|sub_id),
                data = model2ED_data)
-summary(model2ED)
+summary(model2EDwstereo)
 ```
 
 Running it on its own with stereotyping (which Model 2 includes adding both ED and stereotyping at once) does not converge. Most likely due to too few items nested within the higher level for so many variables and not enough variance between the two.
+
+We removed random slopes for the selfED_c predictor and then the model converged. We looked at the impact of removing this random slope in models for the everyday likes without stereotyping and BFI with stereotyping and found it did not have an impact on results.
+
+#### Plot: ME target group
+
+```{r model 2 ED prep main effect group with stereo}
+mod2ED_proj_group_wstereo <- effect(term = "selfED_c:group_cond", 
+                           xlevels = list(group_cond = c("In-group", "Out-group")), 
+                           mod = model2EDwstereo)
+
+mod2ED_proj_group_wstereo <- as.data.frame(mod2ED_proj_group_wstereo)
+```
+
+```{r Model 2 ED main effect group plot with stereo}
+ggplot(mod2ED_proj_group_wstereo, aes(selfED_c, fit, group = group_cond)) +
+  geom_smooth(method = "lm", 
+              se = FALSE, 
+              size = .7, 
+              colour = "black", 
+              aes(linetype = group_cond)) +
+  theme_minimal(base_size = 13) +
+  theme(legend.key.size = unit(1, "cm"),
+        legend.title = element_blank()) +
+  labs(title = "Model 2: Main effect of target group on projection",
+       subtitle = "Projection using ED likes items controlling for stereotyping",
+         x = "ED items for self",
+         y = "ED items for target")
+```
 
 ## BFI only with stereo
 
@@ -1017,6 +1045,49 @@ summary(model4EDBFI)
 ```
 
 When BFI and ED combined, significant higher order interactions disappear. 
+
+#### Plot: Projection by stereo, group, & identification
+
+```{r model 3 ED stereo * ident *proj int prep}
+describe(EDBFI_data$identification_c)
+describe(EDBFI_data$stereo_c)
+
+mod3stereo_4way_effects <- effect(term = "stereo_c:group_cond:self_c:identification_c", 
+                           xlevels = list(identification_c = c(-1.27, 0, 1.27),
+                                          stereo_c = c(-1.18, 0, 1.18)), 
+                           mod = model4EDBFI)
+
+mod3stereo_4way_effects <- as.data.frame(mod3stereo_4way_effects)
+
+mod3stereo_4way_effects %<>% 
+  mutate(Identification = as.factor(identification_c),
+         Stereotyping = as.factor(stereo_c),
+         Identification = dplyr::recode(Identification,
+                                         `-1.27` = "Low Identification",
+                                         `0` = "Ave Identification",
+                                         `1.27` = "High Identificaiton"),
+         Stereotyping = dplyr::recode(Stereotyping,
+                                      `-1.18` = "Low stereotyping",
+                                      `0` = "Ave stereotyping",
+                                      `1.18` = "High stereotyping")) 
+```
+
+```{r model 3 ED stereo x ident x proj int plot}
+ggplot(mod3stereo_4way_effects, aes(self_c, 
+                                      fit, 
+                                      group = group_cond, 
+                                      colour = group_cond)) +
+  geom_smooth(method = "lm", se = FALSE, size = .7, colour = "black",
+              aes(linetype = group_cond)) +
+  facet_wrap(vars(Identification, Stereotyping)) +
+  theme_sjplot() +
+  theme(legend.key.size = unit(1, "cm"),
+        legend.title = element_blank()) +
+  labs(title = "Projection by stereotyping, identification, and group",
+       subtitle = "Projection using ED + BFI items",
+       x = "ED + BFI items for self",
+       y = "ED + BFI items for target")
+```
 
 ### Plot: ME target group on stereo
 
