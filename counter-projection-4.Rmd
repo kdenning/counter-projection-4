@@ -1223,8 +1223,9 @@ https://cran.r-project.org/web/packages/parameters/vignettes/efa_cfa.html
 
 ```{r EFA check}
 EFA <- EDBFI_overall %>% 
-  select(identification, threat, perceive_polar, fundaMoral, contentiousness) %>% 
-  unique()
+  select(sub_id, identification, threat, perceive_polar, fundaMoral, contentiousness) %>% 
+  unique() %>% 
+  select(-sub_id)
 
 
 # Check factor structure to see if there is enough correlation, etc. for factor analysis
@@ -1241,7 +1242,7 @@ as.data.frame(factors_exp)
 summary(factors_exp)
 ```
 
-The majority of tests suggest only 1 factor, followed by 2 latent factors. 2 latent factors may make more theoretical sense for our data, but we will look at both.
+The majority of tests suggest only 1 factor, followed by 2 or 4 latent factors. 2 latent factors may make more theoretical sense for our data, but we will look at both.
 
 ```{r EFAs}
 efa_1fac <- psych::fa(EFA, nfactors = 1) %>% 
@@ -1257,5 +1258,24 @@ efa_3fac <- psych::fa(EFA, nfactors = 3) %>%
 efa_3fac
 ```
 
-The EFA with 2 factors explains more of the total variance of the original data. Just for fun, I also tried 3 factors, and it worsened the explanation and none of the variables were used in the third factor. It appears that the 2 factor structure is our best structure. This structure also combines threat & contentiousness into one factor and fundamental morals, identification, and perceived polarization into another factor. These factors seem to fall into two separate categories: (1) Aggression, (2) Group beliefs.
+The EFA with 2 factors explains more of the total variance of the original data. Just for fun, I also tried 3 factors, and it worsened the explanation and none of the variables were used in the third factor. The 4 factor model did not converge.
 
+It appears that the 2 factor structure is our best structure. This structure also combines threat & contentiousness into one factor and fundamental morals, identification, and perceived polarization into another factor. These factors seem to fall into two separate categories: (1) Aggression, (2) Group beliefs.
+
+```{r check reliability before combining factors}
+psych::alpha(EFA)
+
+aggression <- EFA %>% 
+  select(c(threat, contentiousness))
+
+psych::alpha(aggression)
+
+group_beliefs <- EFA %>% 
+  select(c(identification, perceive_polar, fundaMoral))
+
+psych::alpha(group_beliefs)
+```
+
+Interestingly, the two-factor structure does not contain the best (or acceptable) reliability. The aggression variable only reaches an alpha of .54, while the group beliefs factor only reaches an alpha of .43. When all 5 are combined, they have an alpha of .59. The overall alpha showed that if perceived polarization is dropped, the other four variables would achieve an alpha of .69, which is the highest alpha out of all the combinations and the only one bordering on acceptable. Dropping identification - which we have already run in our confirmatory analysis - only gets an alpha of .52. Since we stated we would only combine into factors if over .8, which these are not, we will not be combining into factors based on these criteria. 
+
+We did state that we would combined moderators that were correlated greater than .7 if the EFA and reliability plan failed. We will look into this next.
