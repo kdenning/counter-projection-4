@@ -164,6 +164,13 @@ clean_data <- wide_data %>%
             race_8_TEXT, country_birth_2_TEXT, country_raised_2_TEXT,
             native_language_2_TEXT, IPAddress)) %>% 
   # making one variable for the following variables depending on which target (supported Trump vs did not) participants saw for both BFI and ED scales
+  pivot_longer(c(lib_pol_trump_8, cons_pol_trump_8, 
+                 lib_pol_antitrump_8, cons_pol_antitrump_8),
+               names_sep = "_",
+               names_to = c("polar_group", "drop1", "drop2", "drop3")) %>% 
+  pivot_wider(names_from = polar_group, values_from = value) %>% 
+  mutate_at(vars(lib), ~replace(., is.na(.), 99)) %>% #to remove NA's using filtering, making them 99's first, since filter wasn't letting me filter "NA"
+  filter(lib != "99") %>% 
   mutate(stereoBFI = ifelse(BFI_target_group == "Trump", SterBFITrump,
                              ifelse(BFI_target_group == "Anti", SterBFIAnti, 
                                     NA)),
@@ -178,14 +185,6 @@ clean_data <- wide_data %>%
                              fund_pol_trump,
                                   ifelse(opin_pol_combined == 2, 
                                          fund_pol_antitrump, NA)),
-         polar_lib = ifelse(opin_pol_combined == 1, 
-                            lib_pol_trump_8,
-                                  ifelse(opin_pol_combined == 2, 
-                                         lib_pol_antitrump_8, NA)),
-         polar_cons = ifelse(opin_pol_combined == 1, 
-                             cons_pol_antitrump_8,
-                                  ifelse(opin_pol_combined == 2, 
-                                         cons_pol_antitrump_8, NA)),
          threat = ifelse(opin_pol_combined == 1, 
                          threat_pol_trump,
                                   ifelse(opin_pol_combined == 2, 
@@ -211,13 +210,12 @@ clean_data <- wide_data %>%
                                                 ifelse(qcheck_targ_nosupport == 1, 2, NA)))) %>% 
   # dropping variables no longer needed after creating new variables above
   select(-c(cont_pol_trump, cont_pol_antitrump, fund_pol_trump, 
-            fund_pol_antitrump, lib_pol_trump_8, lib_pol_antitrump_8,
-            cons_pol_antitrump_8, cons_pol_antitrump_8, threat_pol_trump,
+            fund_pol_antitrump, threat_pol_trump,
             threat_pol_antitrump, ident_pol_trump, ident_pol_antitrump, consent,
             qcheck_bfi_notsupport, qcheck2_bfi_notsupport, qcheck2_bfi_trump,
             qcheck_bfi_trump, qcheck_targ_trump, qcheck2_targ_trump,
             qcheck_targ_nosupport, qcheck2_targ_nosupport,
-            opin_pol_lastchance, cons_pol_trump_8)) %>% 
+            opin_pol_lastchance)) %>% 
   filter(qcheck_bfi_anti_total == 1) %>% # only keeping participants who got manipulation check for the bfi anti trump right
   filter(qcheck_bfi_trump_total == 1) %>% # same as above but for bfi supporting target
   # putting the qcheck for targets together to avoid NAs, removing NAs, then only keeping correct responses
@@ -228,7 +226,7 @@ clean_data <- wide_data %>%
   filter(value == 1) %>% 
   rename(qcheck_targ = value) %>% 
   filter(citizen == 1)  %>% # only keeping people who are US citizens because study on US politics
-  mutate(perceive_polar = abs(polar_lib - polar_cons)) %>% #getting variable for perceived polar by subtracting perceived polarization for conservatives from liberals and getting teh absolute value of that diff
+  mutate(perceive_polar = abs(lib - cons)) %>% #getting variable for perceived polar by subtracting perceived polarization for conservatives from liberals and getting teh absolute value of that diff
   # centering predictors - will wait to center exploratory predictors until after EFA
   mutate(selfBFI_c = selfBFI - mean(selfBFI, na.rm = TRUE),
          selfED_c = selfED - mean(selfED, na.rm = TRUE),
@@ -1215,19 +1213,25 @@ High identifiers respond more extremely about stereotypical responses than low i
 
 # Exp Model 4 from Pre-reg
 
-# EFA for ED + BFI data
+## EFA for ED + BFI data
 
 https://cran.r-project.org/web/packages/parameters/vignettes/efa_cfa.html
 
-**Should we run an EFA? Is our data applicable?**
+Missing data per individual difference variable:
 
-```{r EFA check}
+```{r}
 EFA <- EDBFI_overall %>% 
   select(sub_id, identification, threat, perceive_polar, fundaMoral, contentiousness) %>% 
   unique() %>% 
   select(-sub_id)
 
+sapply(EFA, function(x) sum(is.na(x)))
+```
 
+**Should we run an EFA? Is our data applicable?**
+
+
+```{r EFA check}
 # Check factor structure to see if there is enough correlation, etc. for factor analysis
 check_factorstructure(EFA)
 ```
@@ -1242,7 +1246,7 @@ as.data.frame(factors_exp)
 summary(factors_exp)
 ```
 
-The majority of tests suggest only 1 factor, followed by 2 or 4 latent factors. 2 latent factors may make more theoretical sense for our data, but we will look at both.
+The majority of tests suggest only 1 factor, followed by 2 or 4 latent factors. 2 latent factors may make more theoretical sense for so few variables, but we will look at all three options.
 
 ```{r EFAs}
 efa_1fac <- psych::fa(EFA, nfactors = 1) %>% 
@@ -1253,12 +1257,12 @@ efa_2fac <- psych::fa(EFA, nfactors = 2) %>%
   model_parameters(sort = TRUE, threshold = "max")
 efa_2fac
 
-efa_3fac <- psych::fa(EFA, nfactors = 3) %>% 
+efa_4fac <- psych::fa(EFA, nfactors = 4) %>% 
   model_parameters(sort = TRUE, threshold = "max")
-efa_3fac
+efa_4fac
 ```
 
-The EFA with 2 factors explains more of the total variance of the original data. Just for fun, I also tried 3 factors, and it worsened the explanation and none of the variables were used in the third factor. The 4 factor model did not converge.
+The EFA with 2 factors explains more of the total variance of the original data (48%). The 4 factor then explained the next highest amount of total variance (42%). Our singly factor latent variable EFA explained only 33% of the total variance.
 
 It appears that the 2 factor structure is our best structure. This structure also combines threat & contentiousness into one factor and fundamental morals, identification, and perceived polarization into another factor. These factors seem to fall into two separate categories: (1) Aggression, (2) Group beliefs.
 
@@ -1279,3 +1283,24 @@ psych::alpha(group_beliefs)
 Interestingly, the two-factor structure does not contain the best (or acceptable) reliability. The aggression variable only reaches an alpha of .54, while the group beliefs factor only reaches an alpha of .43. When all 5 are combined, they have an alpha of .59. The overall alpha showed that if perceived polarization is dropped, the other four variables would achieve an alpha of .69, which is the highest alpha out of all the combinations and the only one bordering on acceptable. Dropping identification - which we have already run in our confirmatory analysis - only gets an alpha of .52. Since we stated we would only combine into factors if over .8, which these are not, we will not be combining into factors based on these criteria. 
 
 We did state that we would combined moderators that were correlated greater than .7 if the EFA and reliability plan failed. We will look into this next.
+
+## Correlation matrix
+
+```{r correlation matrix}
+cor(EFA, method = "pearson", use = "complete.obs")
+```
+
+None of the variables are correlation over .7 (actually .52 is the highest), so we will use them all individually.
+
+## Exploratory Moderator Results w/o stereo
+
+```{r}
+
+model4_nostereo <- lmer(Targ ~ group_cond*self_c*perceive_polar +
+                          group_cond*self_c*
+                        + (self_c|sub_id),
+               data = EDBFI_overall)
+
+summary(model3EDBFI_nostereo)
+
+```
