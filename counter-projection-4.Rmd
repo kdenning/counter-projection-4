@@ -1232,7 +1232,10 @@ indivdiff_data <- EDBFI_overall %>%
   mutate_at(vars(lib), ~replace(., is.na(.), 99)) %>% #to remove NA's using filtering, making them 99's first, since filter wasn't letting me filter "NA"
   filter(lib != "99") %>% 
   mutate(perceive_polar = abs(lib - cons),
-         perceive_polar_c = perceive_polar - mean(perceive_polar, na.rm = TRUE))#getting variable for perceived polar by subtracting perceived polarization for conservatives from liberals and getting teh absolute value of that diff
+         perceive_polar_c = perceive_polar - mean(perceive_polar, na.rm = TRUE),
+         content_c = contentiousness - mean(contentiousness, na.rm = TRUE),
+         threat_c = threat - mean(threat, na.rm = TRUE),
+         fundaMoral_c = fundaMoral - mean(fundaMoral, na.rm = TRUE))#getting variable for perceived polar by subtracting perceived polarization for conservatives from liberals and getting teh absolute value of that diff
   
 EFA <- indivdiff_data %>% 
   select(sub_id, identification, threat, perceive_polar, fundaMoral, contentiousness) %>% 
@@ -1326,13 +1329,89 @@ None of the variables are correlation over .7 (actually .52 is the highest), so 
 
 ## Exploratory Moderator Results w/o stereo
 
-```{r}
+**To lessen the number of models run and the potential for spurious significant effects, we put all moderators in the same model, but only interacting with self and group (i.e., the moderators did not interact with each other). The model did converge, so we will use it.**
 
-model4_nostereo <- lmer(Targ ~ group_cond*self_c*perceive_polar +
-                          group_cond*self_c*
+```{r model 4 without stereo}
+indivdiff_data_nostereo <- indivdiff_data %>% 
+  select(-stereo, -stereo_c, -perceive_polar, - contentiousness, -stereo, -self,
+         -lib, -cons, -fundaMoral, -threat, -identification) %>% 
+  na.omit()
+
+model4_nostereo <- lmer(Targ ~ group_cond*self_c*perceive_polar_c +
+                          group_cond*self_c*threat_c +
+                          group_cond*self_c*content_c +
+                          group_cond*self_c*fundaMoral_c +
                         + (self_c|sub_id),
-               data = EDBFI_overall)
+               data = indivdiff_data_nostereo)
 
-summary(model3EDBFI_nostereo)
+summary(model4_nostereo)
+```
+
+Even with moderators, we still have a significant main effect of group. All other significant main effects and interactions on projection are listed below.
+
+Sig. main effects on projection:
+
+* Threat
+* Fundamental moral rights
+
+Sig. interactions:
+* Group x perceived polarization
+* Group x fundamental moral rights
+
+## ## Exploratory Moderator Results with stereo
+
+```{r model 4 stereo}
+indivdiff_data_stereo <- indivdiff_data %>% 
+  select(-stereo, -perceive_polar, - contentiousness, -stereo, -self,
+         -lib, -cons, -fundaMoral, -threat, -identification) %>% 
+  na.omit()
+
+model4_stereo <- lmer(Targ ~ group_cond*self_c*perceive_polar_c*stereo_c +
+                          group_cond*self_c*threat_c*stereo_c +
+                          group_cond*self_c*content_c*stereo_c +
+                          group_cond*self_c*fundaMoral_c*stereo_c +
+                        + (self_c|sub_id),
+               data = indivdiff_data_stereo)
+
+summary(model4_stereo)
+```
+
+Even with moderators and stereotyping, we still have a significant main effect of group, BUT we will need to plot it to see direction (though the estimate is negative). All other significant main effects and interactions are listed below. The significant effects on stereotyping solely (no projection involved) are listed, but not plotted due to interest and sake of researcher time.
+
+Sig. main effects on projection:
+* Threat
+
+
+Sig. interactions on projection:
+* Group x stereotyping
+* Group x perceived polarization x stereotyping
+
+
+Marginal effects projection:
+* Stereotyping main effect on projection at .052
+* Fundamental moral rights at .09
+
+Sig main effects on stereo:
+* Perceived polarization
+* Threat
+* Fundamental moral rights
+
+Sig. interactions on stereo:
+
+Marginal effects stereo:
+* Group
+* Threat x group
+
+```{r}
+indivdiff_data_stereo <- indivdiff_data %>% 
+  select(-stereo, -perceive_polar, - contentiousness, -stereo, -self,
+         -lib, -cons, -fundaMoral, -threat, -identification) %>% 
+  na.omit()
+
+model4_stereo_fm <- lmer(Targ ~ group_cond*self_c*fundaMoral_c*stereo_c +
+                        + (self_c|sub_id),
+               data = indivdiff_data_stereo)
+
+summary(model4_stereo_fm)
 
 ```
