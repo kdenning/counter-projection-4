@@ -4,6 +4,32 @@ author: "Kathryn Denning"
 date: "1/25/2021"
 output: html_document
 ---
+## Parent Edu
+
+```{r parent education}
+pedu_counts <- clean_ptcheck %>% 
+  select(sub_id, parent_education) %>% 
+  na.omit() %>% 
+  mutate(education = dplyr::recode(parent_education,
+                                     `20` = "Less than high school",
+                                     `21` = "High school graduate",
+                                     `22` = "Some college",
+                                     `23` = "Associate's degree",
+                                     `24` = "Bachelor's degree",
+                                     `26` = "Some graduate school",
+                                     `1` = "Master's degree",
+                                     `2` = "Doctorate or Professional Degree")) %>% 
+  unique() %>% 
+  group_by(education) %>% 
+  count()
+
+pedu_counts %>% 
+  mutate(n_total = sum(edu_counts$n),
+    percent = n/n_total*100) %>% 
+  select(-n_total)
+```
+
+
 # Mod 2: Stereo by group BFI only
 
 ```{r model 2 data}
