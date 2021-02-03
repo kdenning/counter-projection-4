@@ -76,7 +76,10 @@ clean_ptcheck %<>%
          native_language = as.factor(native_language),
          citizen = as.factor(citizen),
          us_location = as.factor(us_location),
-         group_cond = as.factor(group_cond)) %>% 
+         group_cond = as.factor(group_cond),
+         opin_pol_combined = dplyr::recode(opin_pol_combined,
+                                    `1` = "Trump supporter",
+                                    `2` = "Anti Trump")) %>% 
   mutate_if(is.integer,funs(as.numeric))
 ```
 
@@ -111,9 +114,6 @@ clean_ptcheck %>%
 clean_ptcheck %>% 
   select(sub_id, group_cond, opin_pol_combined) %>% 
   unique() %>% 
-  mutate(opin_pol_combined = dplyr::recode(opin_pol_combined,
-                                    `1` = "Trump supporter",
-                                    `2` = "Anti Trump")) %>% 
   group_by(group_cond, opin_pol_combined) %>% 
   count()
 ```
@@ -1386,3 +1386,96 @@ summary(model4_nostereo)
 
 Even with moderators, we still have a significant main effect of group. The significant interactions of group and perceived polarization and fundamental beliefs remain, but the interaction with threat disappears.
 
+# Exp results w/ voting opinion
+
+## ED + BFI Results
+
+```{r exp opin EDBFI results}
+mod_opin_EDBFI <- lmer(Targ ~ group_cond*self_c*opin_pol_combined +
+                        + (self_c|sub_id),
+               data = EDBFI_data)
+
+summary(mod_opin_EDBFI)
+```
+
+### Plot ME opinion
+
+```{r exp opin plot EDBFI opin main}
+ggplot(EDBFI_data, aes(self_c, 
+                       Targ, 
+                       group = opin_pol_combined, 
+                       colour = opin_pol_combined)) +
+  geom_smooth(method = "lm", se = FALSE, size = .7, colour = "black",
+              aes(linetype = opin_pol_combined)) +
+  theme_minimal() +
+  theme(legend.key.size = unit(1, "cm"),
+        legend.title = element_blank()) +
+  labs(title = "Model 4: Projection predicted by voting opinion",
+       subtitle = "Projection using ED + BFI items",
+       x = "ED + BFI items for self",
+       y = "ED + BFI items for target")
+```
+
+## ED Only
+
+```{r exp opin ED results}
+#removing na's for particular analysis for ED analysis
+mod_opin_ed_data <- clean_ptcheck %>% 
+  select(sub_id, TargED, group_cond, selfED_c, opin_pol_combined) %>% 
+  na.omit()
+
+mod_opin_ED <- lmer(TargED ~ group_cond*selfED_c*opin_pol_combined +
+                        + (selfED_c|sub_id),
+               data = mod_opin_ed_data)
+
+summary(mod_opin_ED)
+```
+
+### Plot ME Opinion
+
+```{r exp opin plot ED opin main}
+ggplot(mod_opin_ed_data, aes(selfED_c, 
+                       TargED, 
+                       group = opin_pol_combined, 
+                       colour = opin_pol_combined)) +
+  geom_smooth(method = "lm", se = FALSE, size = .7, colour = "black",
+              aes(linetype = opin_pol_combined)) +
+  theme_minimal() +
+  theme(legend.key.size = unit(1, "cm"),
+        legend.title = element_blank()) +
+  labs(title = "Model 4: Projection predicted by voting opinion",
+       subtitle = "Projection using ED items",
+       x = "ED items for self",
+       y = "ED items for target")
+```
+
+## BFI Only
+
+```{r exp opin BFI results}
+#removing na's for particular analysis for ED analysis
+mod_opin_bfi_data <- clean_ptcheck %>% 
+  select(sub_id, TargBFI, group_cond, selfBFI_c, opin_pol_combined) %>% 
+  na.omit()
+
+mod_opin_BFI <- lmer(TargBFI ~ group_cond*selfBFI_c*opin_pol_combined +
+                        + (selfBFI_c|sub_id),
+               data = mod_opin_bfi_data)
+
+summary(mod_opin_BFI)
+```
+
+```{r exp opin plot ED opin main}
+ggplot(mod_opin_bfi_data, aes(selfBFI_c, 
+                       TargBFI, 
+                       group = opin_pol_combined, 
+                       colour = opin_pol_combined)) +
+  geom_smooth(method = "lm", se = FALSE, size = .7, colour = "black",
+              aes(linetype = opin_pol_combined)) +
+  theme_minimal() +
+  theme(legend.key.size = unit(1, "cm"),
+        legend.title = element_blank()) +
+  labs(title = "Model 4: Projection predicted by voting opinion",
+       subtitle = "Projection using BFI items",
+       x = "BFI items for self",
+       y = "BFI items for target")
+```
