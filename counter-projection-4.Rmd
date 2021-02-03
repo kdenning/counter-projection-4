@@ -856,7 +856,7 @@ mod3nostereo_proj_ident_effects %<>%
   mutate(Identification = as.factor(identification_c),
          Identification = dplyr::recode(Identification,
                                          `-1.27` = "Low identification \n (1 SD below)",
-                                         `0` = "Average identification",
+                                         `0` = "Average \n identification",
                                          `1.27` = "High identificaiton \n (1 SD above)"))
 ```
 
@@ -887,7 +887,7 @@ As identification increases, out-group counter projection increases as well as i
 mod3EDBFI_nostereo_proj_group_plot <- get_groupME_proj_plot(model3EDBFI_nostereo)
 
 mod3EDBFI_nostereo_proj_group_plot +
-  labs(title = "Model 3: Main effect of target group on projection",
+  labs(title = "Model 3: Main effect of group on projection controlling for identification",
        subtitle = "Using 'Everyday Likes' + BFI items when stereotyping removed",
          x = "ED + BFI items for self",
          y = "ED + BFI items for target",
@@ -908,9 +908,9 @@ mod3EDBFI_nostereo_proj_ident <- as.data.frame(mod3EDBFI_nostereo_proj_ident)
 mod3EDBFI_nostereo_proj_ident %<>% 
   mutate(Identification = as.factor(identification_c),
          Identification = dplyr::recode(Identification,
-                                         `-1.27` = "Low identification \n (1 SD below)",
-                                         `0` = "Average identification",
-                                         `1.27` = "High identificaiton \n (1 SD above)"))
+                                         `-1.27` = "Low (1 SD below)",
+                                         `0` = "Average",
+                                         `1.27` = "High (1 SD above)"))
 ```
 
 ```{r Model 3 no stereo EDBFI main effect ident plot}
@@ -921,11 +921,10 @@ ggplot(mod3EDBFI_nostereo_proj_ident, aes(self_c, fit, group = Identification)) 
               colour = "black", 
               aes(linetype = Identification)) +
   theme_minimal(base_size = 13) +
-  labs(title = "Model 3: Main effect of identification on projection",
+  labs(title = "Model 3: Main effect of identification on projection controlling for group",
        subtitle = "Using 'Everyday Likes' + BFI items when stereotyping removed",
          x = "ED + BFI items for self",
-         y = "ED + BFI items for target",
-         linetype = "Group")
+         y = "ED + BFI items for target")
 ```
 
 On lower scores for ED + BFI, there is less difference in projection between identification groups. As identification increases, you see more projection in high identifiers compared to average and then low identifiers.
@@ -971,13 +970,13 @@ mod3stereo_3way_effects %<>%
   mutate(Identification = as.factor(identification_c),
          Stereotyping = as.factor(stereo_c),
          Identification = dplyr::recode(Identification,
-                                         `-1.27` = "Low Identification",
-                                         `0` = "Ave Identification",
-                                         `1.27` = "High Identification"),
+                                         `-1.27` = "Low (1 SD below)",
+                                         `0` = "Average",
+                                         `1.27` = "High (1 SD above)"),
          Stereotyping = dplyr::recode(Stereotyping,
-                                      `-1.18` = "Low stereotyping",
-                                      `0` = "Ave stereotyping",
-                                      `1.18` = "High stereotyping")) 
+                                      `-1.18` = "Low stereotyping \n (1 SD below)",
+                                      `0` = "Average \n stereotyping",
+                                      `1.18` = "High stereotyping \n (1 SD above")) 
 ```
 
 ```{r model 3 ED stereo x ident x proj int plot}
@@ -988,9 +987,8 @@ ggplot(mod3stereo_3way_effects, aes(self_c,
   geom_smooth(method = "lm", se = FALSE, size = .7, colour = "black",
               aes(linetype = Identification)) +
   facet_wrap(vars(Stereotyping)) +
-  theme_sjplot() +
-  theme(legend.key.size = unit(1, "cm"),
-        legend.title = element_blank()) +
+  theme_minimal()
+  theme(legend.key.size = unit(1, "cm")) +
   labs(title = "Model 3: Projection predicted by stereotyping and identification",
        subtitle = "Projection using ED + BFI items",
        x = "ED + BFI items for self",
@@ -1011,17 +1009,16 @@ mod3stereo_ident <- as.data.frame(mod3stereo_ident)
 mod3stereo_ident %<>% 
   mutate(Identification = as.factor(identification_c),
          Identification = dplyr::recode(Identification,
-                                         `-1.27` = "Low Identification",
-                                         `0` = "Ave Identification",
-                                         `1.27` = "High Identification"))
+                                         `-1.27` = "Low (1 SD below)",
+                                         `0` = "Average",
+                                         `1.27` = "High (1 SD above)"))
 ```
 
 ```{r mod 3 stereo plot for stereo by ident}
 ggplot(mod3stereo_ident, aes(stereo_c, fit, group = Identification, colour = Identification)) +
   geom_smooth(method = "lm", se = FALSE, size = .7, colour = "black",
               aes(linetype = Identification)) +
-  theme(legend.key.size = unit(1, "cm"),
-        legend.title = element_blank()) +
+  theme(legend.key.size = unit(1, "cm")) +
   labs(title = "Stereotyping by identification",
        subtitle = "Using ED + BFI items",
        x = "ED + BFI items for stereotypical group",
@@ -1048,9 +1045,9 @@ mod3stereobygroupident <- as.data.frame(mod3stereobygroupident)
 mod3stereobygroupident %<>% 
   mutate(Identification = as.factor(identification_c),
          Identification = dplyr::recode(Identification,
-                                         `-1.27` = "Low Identification",
-                                         `0` = "Ave Identification",
-                                         `1.27` = "High Identification")) 
+                                         `-1.27` = "Low identification \n (1 SD below)",
+                                         `0` = "Average \n identification",
+                                         `1.27` = "High identification \n (1 SD above)")) 
 ```
 
 ```{r model 3 ED stereo x ident x group int plot}
@@ -1062,15 +1059,13 @@ ggplot(mod3stereobygroupident, aes(stereo_c,
               aes(linetype = group_cond)) +
   facet_wrap(vars(Identification)) +
   theme_sjplot() +
-  theme(legend.key.size = unit(1, "cm"),
-        legend.title = element_blank()) +
+  theme(legend.key.size = unit(1, "cm")) +
   labs(title = "Marginal: Stereotyping by identification and group",
        subtitle = "Using ED + BFI items",
        x = "ED + BFI items for stereotypical group",
-       y = "ED + BFI items for target")
+       y = "ED + BFI items for target",
+       linetype = "Group")
 ```
-
-High identifiers respond more extremely about stereotypical responses than low identifiers, and this difference in intercept between in and out-group targets is more pronounced for high identifiers than low identifiers.
 
 # Exp Model 4 from Pre-reg
 
@@ -1218,9 +1213,9 @@ mod4_polar_effects <- as.data.frame(mod4_polar_effects)
 mod4_polar_effects %<>% 
   mutate(Polarization = as.factor(perceive_polar_c),
          Polarization = dplyr::recode(Polarization,
-                                         `-2.42` = "Low Polarization",
-                                         `0` = "Ave Polarization",
-                                         `2.42` = "High Polarization")) 
+                                         `-2.42` = "Low polarization \n (1 SD below)",
+                                         `0` = "Average \n polarization",
+                                         `2.42` = "High polarization \n (1 SD above)")) 
 ```
 
 ```{r model 4 perceived polar 3 way plot}
@@ -1237,7 +1232,8 @@ ggplot(mod4_polar_effects, aes(self_c,
   labs(title = "Model 4: Projection predicted by group and perceived polarization",
        subtitle = "Projection using ED + BFI items",
        x = "ED + BFI items for self",
-       y = "ED + BFI items for target")
+       y = "ED + BFI items for target",
+       linetype = "Group")
 ```
 
 This interaction is driven by the fact that, when people perceive low polarization, they project with their out-group. However, as polarization increases, counter projection with the out-group target increases. The intercept of positive projection also increases with the in-group as polarizaiton increases.
@@ -1250,7 +1246,6 @@ model4_threat <- lmer(Targ ~ group_cond*self_c*threat_c  +
                data = indivdiff_data_nostereo)
 
 summary(model4_threat)
-
 ```
 
 #### Group x Threat Int Plot
@@ -1268,9 +1263,9 @@ mod4_threat_effects <- as.data.frame(mod4_threat_effects)
 mod4_threat_effects %<>% 
   mutate(Threat = as.factor(threat_c),
          Threat = dplyr::recode(Threat,
-                                `-1.39` = "Low threat",
-                                `0` = "Ave Polarization",
-                                `1.39` = "High threat")) 
+                                `-1.39` = "Low threat \n (1 SD below)",
+                                `0` = "Average threat",
+                                `1.39` = "High threat \n (1 SD above)")) 
 ```
 
 ```{r model 4 threat 3 way plot}
@@ -1287,7 +1282,8 @@ ggplot(mod4_threat_effects, aes(self_c,
   labs(title = "Model 4: Projection predicted by group and threat",
        subtitle = "Projection using ED + BFI items",
        x = "ED + BFI items for self",
-       y = "ED + BFI items for target")
+       y = "ED + BFI items for target",
+       linetype = "Group")
 ```
 
 Same as in polarization, though the slope for those who report low threat is not as steep. Nevertheless, those who do not see those who vote differently as them as threatening project with their out-group. However, as perceived threat increases, counter projection increases. 
@@ -1315,9 +1311,9 @@ mod4_content_effects <- as.data.frame(mod4_content_effects)
 mod4_content_effects %<>% 
   mutate(Contentiousness = as.factor(content_c),
          Contentiousness = dplyr::recode(Contentiousness,
-                                `-1.09` = "Low contentiousness",
-                                `0` = "Ave contentiousness",
-                                `1.09` = "High contentiousness")) 
+                                `-1.09` = "Low contentiousness \n (1 SD below)",
+                                `0` = "Average \n contentiousness",
+                                `1.09` = "High contentiousness \n (1 SD above)")) 
 ```
 
 ```{r model 4 content 3 way plot}
@@ -1334,7 +1330,8 @@ ggplot(mod4_content_effects, aes(self_c,
   labs(title = "Model 4: Projection predicted by group and contentiousness",
        subtitle = "This interaction is not significant",
        x = "ED + BFI items for self",
-       y = "ED + BFI items for target")
+       y = "ED + BFI items for target",
+       linetype = "Group")
 ```
 
 ### Fundamental moral model
@@ -1360,9 +1357,9 @@ mod4_fundmoral_effects <- as.data.frame(mod4_fundmoral_effects)
 mod4_fundmoral_effects %<>% 
   mutate(fundaMoral = as.factor(fundaMoral_c),
          fundaMoral = dplyr::recode(fundaMoral,
-                                `-1.17` = "Low importance to /n fundamental beliefs",
-                                `0` = "Average",
-                                `1.17` = "High importance to /n fundamental beliefs")) 
+                                `-1.17` = "Low importance to \n fundamental beliefs",
+                                `0` = "Average \n importance",
+                                `1.17` = "High importance to \n fundamental beliefs")) 
 ```
 
 ```{r model 4 fund moral 3 way plot}
@@ -1376,7 +1373,7 @@ ggplot(mod4_fundmoral_effects, aes(self_c,
   theme_minimal() +
   theme(legend.key.size = unit(1, "cm"),
         legend.title = element_blank()) +
-  labs(title = "Model 4: Projection predicted by fundamental morals and group",
+  labs(title = "Model 4: Projection predicted by fundamental beliefs and group",
        subtitle = "Projection using ED + BFI items",
        x = "ED + BFI items for self",
        y = "ED + BFI items for target")
@@ -1421,12 +1418,12 @@ ggplot(EDBFI_mod2, aes(self_c,
   geom_smooth(method = "lm", se = FALSE, size = .7, colour = "black",
               aes(linetype = opin_pol_combined)) +
   theme_minimal() +
-  theme(legend.key.size = unit(1, "cm"),
-        legend.title = element_blank()) +
+  theme(legend.key.size = unit(1, "cm")) +
   labs(title = "Model 4: Projection predicted by voting opinion",
        subtitle = "Projection using ED + BFI items",
        x = "ED + BFI items for self",
-       y = "ED + BFI items for target")
+       y = "ED + BFI items for target",
+       linetype = "Candidate Preference")
 ```
 
 ### ED Only
@@ -1454,12 +1451,12 @@ ggplot(mod_opin_ed_data, aes(selfED_c,
   geom_smooth(method = "lm", se = FALSE, size = .7, colour = "black",
               aes(linetype = opin_pol_combined)) +
   theme_minimal() +
-  theme(legend.key.size = unit(1, "cm"),
-        legend.title = element_blank()) +
+  theme(legend.key.size = unit(1, "cm")) +
   labs(title = "Model 4: Projection predicted by voting opinion",
        subtitle = "Projection using ED items",
        x = "ED items for self",
-       y = "ED items for target")
+       y = "ED items for target",
+       linetype = "Candidate Preference")
 ```
 
 ### BFI Only
@@ -1487,12 +1484,12 @@ ggplot(mod_opin_bfi_data, aes(selfBFI_c,
   geom_smooth(method = "lm", se = FALSE, size = .7, colour = "black",
               aes(linetype = opin_pol_combined)) +
   theme_minimal() +
-  theme(legend.key.size = unit(1, "cm"),
-        legend.title = element_blank()) +
+  theme(legend.key.size = unit(1, "cm")) +
   labs(title = "Model 4: Projection predicted by voting opinion",
        subtitle = "Projection using BFI items",
        x = "BFI items for self",
-       y = "BFI items for target")
+       y = "BFI items for target",
+       linetype = "Candidate Preference")
 ```
 
 ## Political knowledge moderator
@@ -1504,12 +1501,25 @@ Does not appear to moderate projection, but does interact with stereotyping of t
 ```{r political knowledge mod with stereo}
 knowledge_mod_data <- EDBFI_overall %>% 
   select(sub_id, Targ, stereo_c, group_cond, self_c, house_most_members) %>% 
-  na.omit()
+  na.omit() %>% 
+  mutate(political_knowledge = as.factor(ifelse(house_most_members == 2, "Correct", 
+                                      ifelse(house_most_members != 2, "Incorrect", NA))))
 
-knowledge_mod <- lmer(Targ ~ stereo_c*group_cond*self_c*house_most_members + (self_c|sub_id),
+knowledge_mod <- lmer(Targ ~ self_c*group_cond*stereo_c*political_knowledge + (self_c|sub_id),
                data = knowledge_mod_data)
 
 summary(knowledge_mod)
+```
+
+```{r pol know plot stereo}
+pol_know_stereo_plot <- get_groupME_proj_plot(knowledge_mod)
+
+pol_know_stereo_plot +
+  labs(title = "Main effect of group on projection controlling for political knowledge",
+       subtitle = "Stereotyping controlled for in this model",
+       y = "BFI + ED ratings for target",
+       x = "BFI + ED ratings for stereotypical group member",
+       linetype = "Group")
 ```
 
 ### Without stereotyping
@@ -1517,10 +1527,23 @@ summary(knowledge_mod)
 ```{r political knowledge mod without stereo}
 knowledge_mod_data <- EDBFI_overall %>% 
   select(sub_id, Targ, stereo_c, group_cond, self_c, house_most_members) %>% 
-  na.omit()
+  na.omit() %>% 
+  mutate(political_knowledge = as.factor(ifelse(house_most_members == 2, "Correct", 
+                                      ifelse(house_most_members != 2, "Incorrect", NA))))
 
-knowledge_mod_nostereo <- lmer(Targ ~ group_cond*self_c*house_most_members + (self_c|sub_id),
+knowledge_mod_nostereo <- lmer(Targ ~ self_c*group_cond*political_knowledge + (self_c|sub_id),
                data = knowledge_mod_data)
 
 summary(knowledge_mod_nostereo)
+```
+
+```{r pol know plot no stereo}
+pol_know_nostereo_plot <- get_groupME_proj_plot(knowledge_mod_nostereo)
+
+pol_know_nostereo_plot +
+  labs(title = "Main effect of group on projection controlling for political knowledge",
+       subtitle = "Stereotyping not including in this model",
+       y = "BFI + ED ratings for target",
+       x = "BFI + ED ratings for stereotypical group member",
+       linetype = "Group")
 ```
