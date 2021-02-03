@@ -29,6 +29,52 @@ pedu_counts %>%
   select(-n_total)
 ```
 
+```{r function for plot}
+model1_sum$coefficients[[1]]
+['selfBFI_c*group_cond']
+
+df <- as.data.frame(mod1_proj_group[1])
+
+separate(df[1])
+
+get_me_group_plot <- function(data, results, groupvar){#for this function, group var must be a two-level categorical var
+  group_levs <- levels(data$groupvar)
+  group1 <- group_levs[1]
+  group2 <- group_levs[2]
+  
+  mod_effs <- effect(term = "selfBFI_c:group_cond", 
+                           xlevels = list(group = c(group1, group2)), 
+                           mod = results)
+
+  mod_effs <- as.data.frame(mod_effs)
+  return(mod_effs)
+}
+
+get_me_group_plot(model1_data, model1_sum, model1_data$group_cond)
+
+group_levs <- list(length(levels(model1_data$group_cond)))
+mod_effs <- list()
+
+for (i in seq_along (group_levs)){
+  group_levs <- levels(model1_data$group_cond)
+  ing <- group_levs[1]
+  outg <- group_levs[2]
+  
+  mod_effs <- effect(term = "selfBFI_c:group_cond", 
+                           xlevels = list(group = c(ing, outg)), 
+                           mod = model1_sum)
+  
+  return(mod_effs)
+}
+  
+  
+  
+  
+
+  mod_effs <- as.data.frame(mod_effs)
+  return(mod_effs)
+}
+```
 
 # Mod 2: Stereo by group BFI only
 
