@@ -464,7 +464,7 @@ contrasts(model1_data$group_cond)
 ````
 
 ```{r model 1 results}
-model1 <- lmer(Targ ~ self_c*group_cond + (self_c|sub_id),
+model1 <- lmer(TargBFI ~ self_c*group_cond + (self_c|sub_id),
                data = model1_data)
 summary(model1)
 ```
@@ -534,7 +534,7 @@ contrasts(model2ED_data$group_cond)
 ### ED without stereotyping in model
 
 ```{r model 2 ED results not pre-reg}
-model2ED_nostereo <- lmer(Targ ~ self_c*group_cond + (self_c|sub_id),
+model2ED_nostereo <- lmer(TargED ~ self_c*group_cond + (self_c|sub_id),
                data = model2ED_data)
 summary(model2ED_nostereo)
 ```
@@ -557,7 +557,7 @@ Without stereotyping, we see even more extreme counter projection.
 ### ED w/ stereotyping in model
 
 ```{r model 2 ED results}
-model2EDwstereo <- lmer(Targ ~ self_c*group_cond*stereoED_c + (1|sub_id),
+model2EDwstereo <- lmer(TargED ~ self_c*group_cond*stereoED_c + (1|sub_id),
                data = model2ED_data)
 summary(model2EDwstereo)
 ```
@@ -601,7 +601,7 @@ contrasts(model2_bfistereo$group_cond)
 ```
 
 ```{r model 2 bfi stereo results}
-model2_bfistereo_resuts <- lmer(Targ ~ self_c*group_cond*stereoBFI_c + (self_c |sub_id), data = model2_bfistereo)
+model2_bfistereo_resuts <- lmer(TargBFI ~ self_c*group_cond*stereoBFI_c + (self_c |sub_id), data = model2_bfistereo)
 
 summary(model2_bfistereo_resuts)
 ```
@@ -629,7 +629,7 @@ When controlling for stereotyping, the counter projection found earlier does dis
 ```{r model 2 interaction with stereo prep}
 describe(model2_bfistereo$stereoBFI_c)
 
-model2_bfistereo_int_effects <- effect(term = "selfBFI_c:group_cond:stereoBFI_c", 
+model2_bfistereo_int_effects <- effect(term = "self_c:group_cond:stereoBFI_c", 
                            xlevels = list(group_cond = c("In-group", 
                                                          "Out-group"), 
                                          stereoBFI_c = c(-1.22, 0, 1.22)), 
@@ -649,7 +649,7 @@ model2_bfistereo_int_effects %<>%
 ```
 
 ```{r model 2 interaction plot with stereo}
-ggplot(model2_bfistereo_int_effects, aes(selfBFI_c, 
+ggplot(model2_bfistereo_int_effects, aes(self_c, 
                                      fit, 
                                      group = group_cond,
                                      colour = group_cond)) +
@@ -842,7 +842,7 @@ The interaction of target group and identification on projection is significant.
 ### Plot: Int target group & identification on projection
 
 ```{r model 3 no stereo group by ident plot prep}
-describe(EDBFI_data$identification_c)
+describe(EDBFI_mod3$identification_c)
 
 mod3nostereo_proj_ident_effects <- effect(term = "self_c:group_cond:identification_c", 
                            xlevels = list(group_cond = c("In-group", 
@@ -933,7 +933,7 @@ On lower scores for ED + BFI, there is less difference in projection between ide
 ## Exploratory: W/ stereotyping
 
 ```{r model 3 EDBFI results}
-model3EDBFI_stereo <- lmer(Targ ~ self_c*group_cond*stereo_c*identification_c + (self_c|sub_id), data = EDBFI_data)
+model3EDBFI_stereo <- lmer(Targ ~ self_c*group_cond*stereo_c*identification_c + (self_c|sub_id), data = EDBFI_mod3)
 
 summary(model3EDBFI_stereo)
 ```
@@ -955,12 +955,12 @@ mod3EDBFI_stereo_group_plot +
 
 Both projection and stereotyping plots are the same as the results from Model 3 using ED and BFI, indicating that adding identification into the model with the combined scales did not affect the main effects of projection and stereotyping by group. We still see slight counter projection with the out-group and positive projection with the in-group.
 
-### Plot: Int Stereo & Ident on Projection
+### Plot: Marginal Int Stereo & Ident on Projection
 
 ```{r model 3 ED stereo x ident x proj int prep}
-describe(EDBFI_data$stereo_c)
+describe(EDBFI_mod3$stereo_c)
 
-mod3stereo_3way_effects <- effect(term = "stereo_c:self_c:identification_c", 
+mod3stereo_3way_effects <- effect(term = "self_c:stereo_c:identification_c", 
                            xlevels = list(identification_c = c(-1.27, 0, 1.27),
                                           stereo_c = c(-1.18, 0, 1.18)), 
                            mod = model3EDBFI_stereo)
@@ -1000,7 +1000,7 @@ ggplot(mod3stereo_3way_effects, aes(self_c,
 Collapsed across in and out-group target, people who apply low stereotypes to the target, project more as in-group identification increases. Interestingly, people who demonstrate high use of stereotypes to the target exhibit the opposite pattern: low in-group identifiers project the most and as in-group identification increases, projection decreases. Average stereotype users all project around the same amount.
 
 ```{r mod 3 stereo plot prep for stereo by ident}
-describe(EDBFI_data$stereo_c)
+describe(EDBFI_mod3$stereo_c)
 
 mod3stereo_ident <- effect(term = "stereo_c:identification_c", 
                            xlevels = list(identification_c = c(-1.27, 0, 1.27)), 
@@ -1031,14 +1031,14 @@ ggplot(mod3stereo_ident, aes(stereo_c, fit, group = Identification, colour = Ide
 
 As identification increases, stereotyping increases.
 
-#### Marginal: Stereo by group & identification
+#### Stereo by group & identification
 
 **This was not significant, but plotted to see the relationship of all variables.**
 
 ```{r model 3 ED stereo x ident x group int prep}
-describe(EDBFI_data$identification_c)
+describe(EDBFI_mod3$identification_c)
 
-mod3stereobygroupident <- effect(term = "stereo_c:group_cond:identification_c", 
+mod3stereobygroupident <- effect(term = "group_cond:stereo_c:identification_c", 
                            xlevels = list(identification_c = c(-1.27, 0, 1.27),
                                           group_cond = c("In-group", "Out-group")), 
                            mod = model3EDBFI_stereo)
@@ -1406,7 +1406,7 @@ Even with moderators, we still have a significant main effect of group. The sign
 ```{r exp opin EDBFI results}
 mod_opin_EDBFI <- lmer(Targ ~ group_cond*self_c*opin_pol_combined +
                         + (self_c|sub_id),
-               data = EDBFI_data)
+               data = EDBFI_mod2)
 
 summary(mod_opin_EDBFI)
 ```
@@ -1414,7 +1414,7 @@ summary(mod_opin_EDBFI)
 #### Plot ME opinion
 
 ```{r exp opin plot EDBFI opin main}
-ggplot(EDBFI_data, aes(self_c, 
+ggplot(EDBFI_mod2, aes(self_c, 
                        Targ, 
                        group = opin_pol_combined, 
                        colour = opin_pol_combined)) +
