@@ -58,11 +58,28 @@ knitr::opts_chunk$set(echo = TRUE,
 
 # Importing data cleaned & saved in the "Data cleaning & exporting.R" doc
 ## Overall PT data
-clean_ptcheck <- Import("clean_ptcheck.csv") 
-
-## ED + BFI data
-EDBFI_data <- Import("EDBFI_data.csv") 
+clean_ptcheck <- Import("long_format.csv") 
 ```
+
+```{r cleaning var types}
+clean_ptcheck %<>% 
+  mutate(ED_number = as.numeric(ED_number),
+         BFI_number = as.numeric(BFI_number),
+         ED_targ_group = as.factor(ED_targ_group),
+         BFI_target_group = as.factor(BFI_target_group),
+         opin_pol_combined = as.factor(opin_pol_combined),
+         race = as.factor(race),
+         gender = as.factor(gender),
+         education = as.factor(education),
+         parent_education = as.factor(parent_education),
+         country_birth = as.factor(country_birth),
+         native_language = as.factor(native_language),
+         citizen = as.factor(citizen),
+         us_location = as.factor(us_location),
+         group_cond = as.factor(group_cond)) %>% 
+  mutate_if(is.integer,funs(as.numeric))
+```
+
 
 # Demographics
 
@@ -650,6 +667,44 @@ Though not as supportive as I was hoping, I do think it is supportive that - whe
 
 ## BFI + ED no stereo
 
+```{r EDBFI data cleaning}
+EDBFI_overall <- clean_ptcheck %>% 
+  select(sub_id, ED_number, BFI_target_group, TargED, selfED, group_cond, 
+         opin_pol_combined, BFI_number, selfBFI, TargBFI, 
+         stereoBFI, stereoED, identification, contentiousness, fundaMoral, 
+         threat, lib, cons) %>% 
+  unique() %>%
+  rename(self_BFI = selfBFI,
+         self_ED = selfED,
+         Targ_ED = TargED,
+         Targ_BFI = TargBFI,
+         stereo_BFI = stereoBFI,
+         stereo_ED = stereoED) %>% 
+  pivot_longer(c(self_BFI, self_ED, Targ_ED, Targ_BFI, stereo_BFI, stereo_ED),
+               names_sep = "_",
+               names_to = c("EDBFI_groups", "EDBFI_scale")) %>% 
+  pivot_wider(names_from = EDBFI_groups, values_from = value) %>% 
+  mutate(ED_number = as.numeric(dplyr::recode(ED_number,
+                                              `1` = "20",
+                                              `2` = "21",
+                                              `3` = "22",
+                                              `4` = "23",
+                                              `5` = "24")),
+         EDBFI_number = ifelse(EDBFI_scale == "BFI", BFI_number,
+                               ifelse(EDBFI_scale == "ED", ED_number, NA))) %>% 
+  select(-c(ED_number, BFI_number, EDBFI_scale)) %>% 
+  unique() %>% 
+  mutate(self_c = self - mean(self, na.rm = TRUE),
+         stereo_c = stereo - mean(stereo, na.rm = TRUE),
+         identification_c = identification - mean(identification, na.rm = TRUE))
+
+EDBFI_data <- EDBFI_overall %>% 
+  select(-c(contentiousness, fundaMoral, 
+            threat, lib, cons)) %>% 
+  na.omit()
+
+```
+
 ```{n EDBFI data}
 # drops 2 participants due to missing data in identification here
 EDBFI_data %>% 
@@ -768,7 +823,6 @@ ggplot(mod2EDBFI_proj_group_stereo, aes(self_c, fit, group = group_cond)) +
 When everyday likes items are added to the BFI, even with stereotyping controlled for in the model, we see slight counter projection with the out-group target. This corresponds with Confirmatory Prediction #3: "even with stereotyping as a predictor, projection will still explain variance in ratings of the target, producing the significant main effect predicted above and no model singularities (in other words, how the participant rates the Self and the Stereotypical target will each predict unique variance in ratings of the target;  moreover, the model with both of predictors included will not be singular). Although stereotyping may interact with projection as well (we found this in an earlier study), we do not expect the projection-only effects to go away."
 
 Interestingly, we did not find an interaction of stereotyping with projection in our confirmatory results.
-
 
 # Pre-reg Mod 3: Identification as moderator
 
@@ -1041,13 +1095,12 @@ sapply(EFA, function(x) sum(is.na(x)))
 check_factorstructure(EFA)
 ```
 
-These tests say yes!
+These tests say yes
 
 ```{r EFA n factor check}
 factors_exp <- n_factors(EFA)
 factors_exp
 
-as.data.frame(factors_exp)
 summary(factors_exp)
 ```
 
@@ -1117,14 +1170,210 @@ None of the variables are correlation over .7 (actually .52 is the highest), so 
 
 ## Exploratory Moderator Results w/o stereo
 
-**To lessen the number of models run and the potential for spurious significant effects, we put all moderators in the same model, but only interacting with self and group (i.e., the moderators did not interact with each other). The model did converge, so we will use it.**
+**We pre-registered that, for power and because this was an exploratory analysis on the effect of individual differences on counter projection, we would not include stereotyping in this part of the analysis.**
 
-```{r model 4 without stereo}
+```{r indiv data}
 indivdiff_data_nostereo <- indivdiff_data %>% 
   select(-stereo, -stereo_c, -perceive_polar, - contentiousness, -stereo, -self,
          -lib, -cons, -fundaMoral, -threat, -identification) %>% 
   na.omit()
 
+contrasts(indivdiff_data_nostereo$group_cond) <- contr.sum(2)
+contrasts(indivdiff_data_nostereo$group_cond)
+```
+
+### Perceived polar model
+
+```{r}
+model4_polar <- lmer(Targ ~ group_cond*self_c*perceive_polar_c  +
+                        + (self_c|sub_id),
+               data = indivdiff_data_nostereo)
+
+summary(model4_polar)
+```
+
+#### Group x Polarization Int Plot
+
+```{r model 4 perceived polarization 3 way prep}
+describe(indivdiff_data_nostereo$perceive_polar_c)
+
+mod4_polar_effects <- effect(term = "group_cond:self_c:perceive_polar_c", 
+                           xlevels = list(perceive_polar_c = c(-2.42, 0, 2.42),
+                                          group_cond = c("In-group", "Out-group")), 
+                           mod = model4_polar)
+
+mod4_polar_effects <- as.data.frame(mod4_polar_effects)
+
+mod4_polar_effects %<>% 
+  mutate(Polarization = as.factor(perceive_polar_c),
+         Polarization = dplyr::recode(Polarization,
+                                         `-2.42` = "Low Polarization",
+                                         `0` = "Ave Polarization",
+                                         `2.42` = "High Polarization")) 
+```
+
+```{r model 4 perceived polar 3 way plot}
+ggplot(mod4_polar_effects, aes(self_c, 
+                                      fit, 
+                                      group = group_cond, 
+                                      colour = group_cond)) +
+  geom_smooth(method = "lm", se = FALSE, size = .7, colour = "black",
+              aes(linetype = group_cond)) +
+  facet_wrap(vars(Polarization)) +
+  theme_minimal() +
+  theme(legend.key.size = unit(1, "cm"),
+        legend.title = element_blank()) +
+  labs(title = "Model 4: Projection predicted by group and perceived polarization",
+       subtitle = "Projection using ED + BFI items",
+       x = "ED + BFI items for self",
+       y = "ED + BFI items for target")
+```
+
+This interaction is driven by the fact that, when people perceive low polarization, they project with their out-group. However, as polarization increases, counter projection with the out-group target increases. The intercept of positive projection also increases with the in-group as polarizaiton increases.
+
+### Threat model
+
+```{r}
+model4_threat <- lmer(Targ ~ group_cond*self_c*threat_c  +
+                        + (self_c|sub_id),
+               data = indivdiff_data_nostereo)
+
+summary(model4_threat)
+
+```
+
+#### Group x Threat Int Plot
+
+```{r model 4 threat 3 way prep}
+describe(indivdiff_data_nostereo$threat_c)
+
+mod4_threat_effects <- effect(term = "group_cond:self_c:threat_c", 
+                           xlevels = list(threat_c = c(-1.39, 0, 1.39),
+                                          group_cond = c("In-group", "Out-group")), 
+                           mod = model4_threat)
+
+mod4_threat_effects <- as.data.frame(mod4_threat_effects)
+
+mod4_threat_effects %<>% 
+  mutate(Threat = as.factor(threat_c),
+         Threat = dplyr::recode(Threat,
+                                `-1.39` = "Low threat",
+                                `0` = "Ave Polarization",
+                                `1.39` = "High threat")) 
+```
+
+```{r model 4 threat 3 way plot}
+ggplot(mod4_threat_effects, aes(self_c, 
+                                      fit, 
+                                      group = group_cond, 
+                                      colour = group_cond)) +
+  geom_smooth(method = "lm", se = FALSE, size = .7, colour = "black",
+              aes(linetype = group_cond)) +
+  facet_wrap(vars(Threat)) +
+  theme_minimal() +
+  theme(legend.key.size = unit(1, "cm"),
+        legend.title = element_blank()) +
+  labs(title = "Model 4: Projection predicted by group and threat",
+       subtitle = "Projection using ED + BFI items",
+       x = "ED + BFI items for self",
+       y = "ED + BFI items for target")
+```
+
+Same as in polarization, though the slope for those who report low threat is not as steep. Nevertheless, those who do not see those who vote differently as them as threatening project with their out-group. However, as perceived threat increases, counter projection increases. 
+
+### Contentiousness model
+
+```{r}
+model4_content <- lmer(Targ ~ group_cond*self_c*content_c  +
+                        + (self_c|sub_id),
+               data = indivdiff_data_nostereo)
+
+summary(model4_content)
+```
+
+```{r model 4 content 3 way prep}
+describe(indivdiff_data_nostereo$content_c)
+
+mod4_content_effects <- effect(term = "group_cond:self_c:content_c", 
+                           xlevels = list(content_c = c(-1.09, 0, 1.09),
+                                          group_cond = c("In-group", "Out-group")), 
+                           mod = model4_content)
+
+mod4_content_effects <- as.data.frame(mod4_content_effects)
+
+mod4_content_effects %<>% 
+  mutate(Contentiousness = as.factor(content_c),
+         Contentiousness = dplyr::recode(Contentiousness,
+                                `-1.09` = "Low contentiousness",
+                                `0` = "Ave contentiousness",
+                                `1.09` = "High contentiousness")) 
+```
+
+```{r model 4 content 3 way plot}
+ggplot(mod4_content_effects, aes(self_c, 
+                                      fit, 
+                                      group = group_cond, 
+                                      colour = group_cond)) +
+  geom_smooth(method = "lm", se = FALSE, size = .7, colour = "black",
+              aes(linetype = group_cond)) +
+  facet_wrap(vars(Contentiousness)) +
+  theme_minimal() +
+  theme(legend.key.size = unit(1, "cm"),
+        legend.title = element_blank()) +
+  labs(title = "Model 4: Projection predicted by group and contentiousness",
+       subtitle = "This interaction is not significant",
+       x = "ED + BFI items for self",
+       y = "ED + BFI items for target")
+```
+
+### Fundamental moral model
+
+```{r}
+model4_fundmoral <- lmer(Targ ~ group_cond*self_c*fundaMoral_c  +
+                        + (self_c|sub_id),
+               data = indivdiff_data_nostereo)
+
+summary(model4_fundmoral)
+```
+
+```{r model 4 fund moral 3 way prep}
+describe(indivdiff_data_nostereo$fundaMoral_c)
+
+mod4_fundmoral_effects <- effect(term = "group_cond:self_c:fundaMoral_c", 
+                           xlevels = list(fundaMoral_c = c(-1.17, 0, 1.17),
+                                          group_cond = c("In-group", "Out-group")), 
+                           mod = model4_fundmoral)
+
+mod4_fundmoral_effects <- as.data.frame(mod4_fundmoral_effects)
+
+mod4_fundmoral_effects %<>% 
+  mutate(fundaMoral = as.factor(fundaMoral_c),
+         fundaMoral = dplyr::recode(fundaMoral,
+                                `-1.17` = "Low importance to /n fundamental beliefs",
+                                `0` = "Average",
+                                `1.17` = "High importance to /n fundamental beliefs")) 
+```
+
+```{r model 4 fund moral 3 way plot}
+ggplot(mod4_fundmoral_effects, aes(self_c, 
+                                      fit, 
+                                      group = group_cond, 
+                                      colour = group_cond)) +
+  geom_smooth(method = "lm", se = FALSE, size = .7, colour = "black",
+              aes(linetype = group_cond)) +
+  facet_wrap(vars(fundaMoral)) +
+  theme_minimal() +
+  theme(legend.key.size = unit(1, "cm"),
+        legend.title = element_blank()) +
+  labs(title = "Model 4: Projection predicted by fundamental morals and group",
+       subtitle = "Projection using ED + BFI items",
+       x = "ED + BFI items for self",
+       y = "ED + BFI items for target")
+```
+
+### Combined model
+
+```{r model 4 without stereo}
 model4_nostereo <- lmer(Targ ~ group_cond*self_c*perceive_polar_c +
                           group_cond*self_c*threat_c +
                           group_cond*self_c*content_c +
@@ -1135,14 +1384,5 @@ model4_nostereo <- lmer(Targ ~ group_cond*self_c*perceive_polar_c +
 summary(model4_nostereo)
 ```
 
-Even with moderators, we still have a significant main effect of group. All other significant main effects and interactions on projection are listed below.
-
-Sig. main effects on projection:
-
-* Threat
-* Fundamental moral rights
-
-Sig. interactions:
-* Group x perceived polarization
-* Group x fundamental moral rights
+Even with moderators, we still have a significant main effect of group. The significant interactions of group and perceived polarization and fundamental beliefs remain, but the interaction with threat disappears.
 

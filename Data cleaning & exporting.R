@@ -29,7 +29,7 @@ wide_data <- Import("data_downloaded_January_20_2021.csv")
 ### Cleaning Overall PT Dataset ###
 ###################################
 
-clean_data <- wide_data %>% 
+long_format <- wide_data %>% 
   # reverse coding items that need reverse coded
   mutate_at(c("selfBFI_1", "selfBFI_7", "selfBFI_3", "selfBFI_8",
               "selfBFI_14", "selfBFI_10", "selfBFI_17", "selfBFI_18",
@@ -171,7 +171,7 @@ clean_data <- wide_data %>%
             qcheck_bfi_notsupport, qcheck2_bfi_notsupport, qcheck2_bfi_trump,
             qcheck_bfi_trump, qcheck_targ_trump, qcheck2_targ_trump,
             qcheck_targ_nosupport, qcheck2_targ_nosupport,
-            opin_pol_lastchance)) %>% 
+            opin_pol_lastchance, drop1, drop2, drop3)) %>% 
   filter(qcheck_bfi_anti_total == 1) %>% # only keeping participants who got manipulation check for the bfi anti trump right
   filter(qcheck_bfi_trump_total == 1) %>% # same as above but for bfi supporting target
   # putting the qcheck for targets together to avoid NAs, removing NAs, then only keeping correct responses
@@ -195,49 +195,7 @@ clean_data <- wide_data %>%
 # for qcheck for trump targ, 1 is correct; originally
 # for qcheck for anti targ, 2 is correct; originally
 
-clean_ptcheck <- clean_data %>% 
+long_format <- long_format %>% 
   filter(questionable_pt == 1) # only keeping people who completed the PT task correctly
 
-write.csv(clean_ptcheck, 'clean_ptcheck.csv')
-
-
-####################################
-### Cleaning ED + BFI PT Dataset ###
-####################################
-
-EDBFI_overall <- clean_ptcheck %>% 
-  select(sub_id, ED_number, BFI_target_group, TargED, selfED, group_cond, 
-         opin_pol_combined, BFI_number, selfBFI, TargBFI, 
-         stereoBFI, stereoED, identification, contentiousness, fundaMoral, 
-         threat, lib, cons) %>% 
-  unique() %>%
-  rename(self_BFI = selfBFI,
-         self_ED = selfED,
-         Targ_ED = TargED,
-         Targ_BFI = TargBFI,
-         stereo_BFI = stereoBFI,
-         stereo_ED = stereoED) %>% 
-  pivot_longer(c(self_BFI, self_ED, Targ_ED, Targ_BFI, stereo_BFI, stereo_ED),
-               names_sep = "_",
-               names_to = c("EDBFI_groups", "EDBFI_scale")) %>% 
-  pivot_wider(names_from = EDBFI_groups, values_from = value) %>% 
-  mutate(ED_number = as.numeric(dplyr::recode(ED_number,
-                                              `1` = "20",
-                                              `2` = "21",
-                                              `3` = "22",
-                                              `4` = "23",
-                                              `5` = "24")),
-         EDBFI_number = ifelse(EDBFI_scale == "BFI", BFI_number,
-                               ifelse(EDBFI_scale == "ED", ED_number, NA))) %>% 
-  select(-c(ED_number, BFI_number, EDBFI_scale)) %>% 
-  unique() %>% 
-  mutate(self_c = self - mean(self, na.rm = TRUE),
-         stereo_c = stereo - mean(stereo, na.rm = TRUE),
-         identification_c = identification - mean(identification, na.rm = TRUE))
-
-EDBFI_data <- EDBFI_overall %>% 
-  select(-c(contentiousness, fundaMoral, 
-            threat, lib, cons)) %>% 
-  na.omit()
-
-write.csv(EDBFI_data, 'EDBFI_data.csv')
+write.csv(long_format, 'long_format.csv')
