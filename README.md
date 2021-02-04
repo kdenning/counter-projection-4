@@ -6,4 +6,4 @@ Any code I wrote but didn't use or played around with was put into the "Extra co
 
 If you want to see all the questions used in the survey, you can check them out in the word document titled "Survey exported from Qualtrics."
 
-The OSF pre-registration is embargoed until https://osf.io/dzth5/. The link is here once it is available to see predictions: 
+The OSF pre-registration is currently embargoed. Once available, predictions will be available at the following link:  https://osf.io/dzth5/ 
