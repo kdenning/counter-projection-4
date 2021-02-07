@@ -57,7 +57,8 @@ clean_ptcheck <- Import("long_format.csv")
 ```{r cleaning var types, echo = FALSE, warning = FALSE, message = FALSE, error = FALSE}
 # Cleaning variable types - this cleaning is not sustained when converted to a .csv and read back in
 clean_ptcheck %<>% 
-  mutate(ED_number = as.numeric(ED_number),
+  mutate(sub_id = as.factor(sub_id),
+         ED_number = as.numeric(ED_number),
          BFI_number = as.numeric(BFI_number),
          ED_targ_group = as.factor(ED_targ_group),
          BFI_target_group = as.factor(BFI_target_group),
@@ -74,7 +75,7 @@ clean_ptcheck %<>%
          opin_pol_combined = dplyr::recode(opin_pol_combined,
                                     `1` = "Trump supporter",
                                     `2` = "Anti Trump")) %>% 
-  mutate_if(is.integer,funs(as.numeric))
+  mutate_if(is.integer,~as.numeric(.))
 ```
 
 # Demographics
