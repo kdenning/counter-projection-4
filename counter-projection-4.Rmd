@@ -10,7 +10,7 @@ output:
   pdf_document:
     toc: yes
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ```{r data prep, echo = FALSE, warning = FALSE, message = FALSE, error = FALSE}
@@ -51,7 +51,7 @@ knitr::opts_chunk$set(echo = TRUE,
 
 
 # Importing data cleaned & saved in the "Data cleaning & exporting.R" doc
-clean_ptcheck <- Import("long_format.csv") 
+clean_ptcheck <- Import("long_format.csv")
 ```
 
 ```{r cleaning var types, echo = FALSE, warning = FALSE, message = FALSE, error = FALSE}
@@ -454,7 +454,7 @@ model1_data <- clean_ptcheck %>%
   # changing the name in the model data-set so the function below will work the same for all models
   mutate(self_c = selfBFI_c) %>% 
   na.omit() %>% 
-  unique()
+  unique() ##### MK: OK, this makes so much sense now! After all those pivot_longers in data cleaning, I was a little confused.
 ```
 
 **Getting effects coding for target group:**
@@ -462,7 +462,7 @@ model1_data <- clean_ptcheck %>%
 ```{r}
 contrasts(model1_data$group_cond) <- contr.sum(2)
 contrasts(model1_data$group_cond)
-````
+```
 
 ```{r model 1 results}
 model1 <- lmer(TargBFI ~ self_c*group_cond + (self_c|sub_id),
@@ -493,7 +493,7 @@ get_groupME_proj_plot <- function(x){
   
   return(groupME_plot)
 }
-````
+```
 
 
 ```{r ME group model 1 plot}
@@ -505,6 +505,9 @@ model1_plot +
        x = "Personality responses for self",
        y = "Personality responses for target",
        linetype = "Group")
+
+##### MK: Just to compare the plots because there was a part I couldn't understand in the function. Looks like the function works nicely.
+interactions::interact_plot(model1, pred = "self_c", modx = "group_cond", plot.points = F, interval = F)
 ```
 
 We replicate our prior finding that people counter project with their political out-group, but project positively with their political in-group target.
@@ -530,7 +533,7 @@ model2ED_data <- clean_ptcheck %>%
 ```{r}
 contrasts(model2ED_data$group_cond) <- contr.sum(2)
 contrasts(model2ED_data$group_cond)
-````
+```
 
 ### ED without stereotyping in model
 
@@ -728,7 +731,7 @@ EDBFI_mod2 %>%
 ```{r model 2 EDBFI contrasts}
 contrasts(EDBFI_mod2$group_cond) <- contr.sum(2)
 contrasts(EDBFI_mod2$group_cond)
-````
+```
 
 ```{r model 2 EDBFI no stereo results}
 model2EDBFI_nostereo <- lmer(Targ ~ self_c*group_cond + (self_c|sub_id),
@@ -925,7 +928,7 @@ ggplot(mod3EDBFI_nostereo_proj_ident, aes(self_c, fit, group = Identification)) 
   labs(title = "Model 3: Main effect of identification on projection controlling for group",
        subtitle = "Using 'Everyday Likes' + BFI items when stereotyping removed",
          x = "ED + BFI items for self",
-         y = "ED + BFI items for target")
+         y = "ED + BFI items for target") ##### MK: It's kind of hard to distinguish the lines on the plot.
 ```
 
 On lower scores for ED + BFI, there is less difference in projection between identification groups. As identification increases, you see more projection in high identifiers compared to average and then low identifiers.

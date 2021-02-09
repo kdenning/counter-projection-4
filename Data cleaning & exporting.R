@@ -19,8 +19,8 @@ library(tidyverse)
 ##### Importing the data #####
 
 # This data has been manually reviewed for completion of PT task; filter will be applied at end of this .R document
-wide_data <- Import("data_downloaded_January_20_2021.csv") 
-
+wide_data <- Import("data_downloaded_January_20_2021.csv") ##### MK: "Import" function didn't work, and I am not sure which package this function comes from. So, I am using rio::import for now.
+wide_data <- rio::import("data_downloaded_January_20_2021.csv")
 ##### Code to check for bots #####
 
 # There are none - as expected using Prolific - hashed out code above since unnecessary
@@ -99,19 +99,15 @@ long_format <- wide_data %>%
   # target per everyday responses and making variables factors or numeric
   mutate(ED_targ_group = (dplyr::recode(ED_targ_group, 
                                         `TargEDTrump`= "Trump",
-                                        `TargEDAnti`= "Anti")),
-         group_cond = as.factor(ifelse(opin_pol_combined == 1 #1 means "yes" they supported Trump's 2020 bid for re-election
-                                       & BFI_target_group == "Trump", 
-                                       "In-group",
-                                       ifelse(opin_pol_combined == 2 #2 means "no" they did not support Trump's re-election
-                                              & BFI_target_group == "Trump", 
-                                              "Out-group",
-                                              ifelse(opin_pol_combined == 1 
-                                                     & BFI_target_group == "Anti", 
-                                                     "Out-group",
-                                                     ifelse(opin_pol_combined == 2 
-                                                            & BFI_target_group == "Anti", 
-                                                            "In-group", NA)))))) %>% 
+                                        `TargEDAnti`= "Anti")), 
+         group_cond = as.factor( # ifelse function always gives me a difficult time. So, I use case_when instead.
+           case_when(
+             opin_pol_combined == 1 & BFI_target_group == "Trump" ~ "In-group", #1 means "yes" they supported Trump's 2020 bid for re-election
+             opin_pol_combined == 2 & BFI_target_group == "Trump" ~ "Out-group",
+             opin_pol_combined == 1 & BFI_target_group == "Anti" ~ "Out-group", #2 means "no" they did not support Trump's re-election
+             opin_pol_combined == 2 & BFI_target_group == "Anti" ~ "In-group"						
+           )
+         )) %>% 
   # dropping unnecessary text variables & the variable "name" that came up from wrangling earlier
   select(-c(name, day_nosupport_targ, day_support_trump_targ, gender_3_TEXT,
             race_8_TEXT, country_birth_2_TEXT, country_raised_2_TEXT,
