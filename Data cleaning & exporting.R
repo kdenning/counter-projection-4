@@ -11,15 +11,17 @@
 
 #install.packages("magrittr")
 #install.packages("tidyverse")
+#install.packages("rio")
 
 # Loading packages
 library(magrittr)
 library(tidyverse)
+library(rio)
 
 ##### Importing the data #####
 
 # This data has been manually reviewed for completion of PT task; filter will be applied at end of this .R document
-wide_data <- Import("data_downloaded_January_20_2021.csv") 
+wide_data <- import("data_downloaded_January_20_2021.csv") 
 
 ##### Code to check for bots #####
 
@@ -100,18 +102,11 @@ long_format <- wide_data %>%
   mutate(ED_targ_group = (dplyr::recode(ED_targ_group, 
                                         `TargEDTrump`= "Trump",
                                         `TargEDAnti`= "Anti")),
-         group_cond = as.factor(ifelse(opin_pol_combined == 1 #1 means "yes" they supported Trump's 2020 bid for re-election
-                                       & BFI_target_group == "Trump", 
-                                       "In-group",
-                                       ifelse(opin_pol_combined == 2 #2 means "no" they did not support Trump's re-election
-                                              & BFI_target_group == "Trump", 
-                                              "Out-group",
-                                              ifelse(opin_pol_combined == 1 
-                                                     & BFI_target_group == "Anti", 
-                                                     "Out-group",
-                                                     ifelse(opin_pol_combined == 2 
-                                                            & BFI_target_group == "Anti", 
-                                                            "In-group", NA)))))) %>% 
+         group_cond = as.factor( # used case_when instead of ifelse for more complex changes (more than 2 variables in one line) after Murat's suggestions bc it is cleaner and does the same thing
+           case_when(opin_pol_combined == 1 & BFI_target_group == "Trump" ~ "In-group", #1 means "yes" they supported Trump's 2020 bid for re-election
+             opin_pol_combined == 2 & BFI_target_group == "Trump" ~ "Out-group",
+             opin_pol_combined == 1 & BFI_target_group == "Anti" ~ "Out-group", #2 means "no" they did not support Trump's re-election
+             opin_pol_combined == 2 & BFI_target_group == "Anti" ~ "In-group"))) %>% 
   # dropping unnecessary text variables & the variable "name" that came up from wrangling earlier
   select(-c(name, day_nosupport_targ, day_support_trump_targ, gender_3_TEXT,
             race_8_TEXT, country_birth_2_TEXT, country_raised_2_TEXT,
