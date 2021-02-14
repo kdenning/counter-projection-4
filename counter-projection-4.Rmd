@@ -1106,7 +1106,7 @@ indivdiff_data <- EDBFI_overall %>%
          content_c = contentiousness - mean(contentiousness, na.rm = TRUE),
          threat_c = threat - mean(threat, na.rm = TRUE),
          fundaMoral_c = fundaMoral - mean(fundaMoral, na.rm = TRUE))#getting variable for perceived polar by subtracting perceived polarization for conservatives from liberals and getting teh absolute value of that diff
-  
+
 EFA <- indivdiff_data %>% 
   select(sub_id, identification, threat, perceive_polar, fundaMoral, contentiousness) %>% 
   unique() %>% 
@@ -1114,6 +1114,14 @@ EFA <- indivdiff_data %>%
 
 # Not too much missing data, I think we should be okay on power
 sapply(EFA, function(x) sum(is.na(x)))
+```
+
+### Exploratory N
+```{r exploratory n}
+indivdiff_data %>% 
+  select(sub_id) %>% 
+  unique() %>% 
+  count()
 ```
 
 ### Can an EFA be run?
