@@ -846,21 +846,24 @@ When everyday likes items are added to the BFI, even with stereotyping controlle
 
 Interestingly, we did not find an interaction of stereotyping with projection in our confirmatory results. As demonstrated by our exploratory heirarchdal build-up models, counter projection is driven by ED when stereotyping is included in the model, as there does not appear to be a stereotype for ED like there is for BFI to moderate counter projection with BFI.
 
-# Pre-reg Mod 3: Identification as moderator {.tabset .tabset-fade .tabset-pills}
+# Model 3: Identification as moderator {.tabset .tabset-fade .tabset-pills}
 
-## Confirmatory Model: W/o stereotyping for power
+## Pre-registered Confirmatory Model
 
-**We will use the combined ED + BFI data-set as pre-registered because the results from the original BFI do not appear that different.**
+**Our pre-registered model used the BFI only, as we pre-registered we would use the BFI only if we found there were differences in the data-sets of the BFI and ED. We also pre-registered we would drop stereotyping to conserve power.**
 
 ### Data note:
 
 ```{r mod 3 data}
-EDBFI_mod3  <- EDBFI_overall %>% 
-  select(-c(contentiousness, fundaMoral, 
-            threat, lib, cons, house_most_members)) %>% 
-  na.omit()
+dataBFI_mod3  <- clean_ptcheck %>% 
+  select(sub_id, BFI_number, BFI_target_group, TargBFI, selfBFI_c, group_cond, 
+         opin_pol_combined, stereoBFI_c, identification_c) %>% 
+  # changing name for plot function
+  mutate(self_c = selfBFI_c) %>% 
+  na.omit() %>% 
+  unique()
 
-EDBFI_mod3 %>% 
+dataBFI_mod3 %>% 
   select(sub_id) %>% 
   unique() %>% 
   nrow()
@@ -871,29 +874,29 @@ EDBFI_mod3 %>%
 ### Results
 
 ```{r model 3 EDBFI no stereo results}
-model3EDBFI_nostereo <- lmer(Targ ~ self_c*group_cond*identification_c + (self_c|sub_id),
-               data = EDBFI_mod3)
+model3BFI_nostereo <- lmer(TargBFI ~ self_c*group_cond*identification_c + (self_c|sub_id),
+               data = dataBFI_mod3)
 
-summary(model3EDBFI_nostereo)
-confint(model3EDBFI_nostereo)
+summary(model3BFI_nostereo)
+confint(model3BFI_nostereo)
 ```
 
 The interaction of target group and identification on projection is significant. The main effect of target group is still significant. There is a marginal effect of identification on projection.
 
 ### Plots
 
-```{r model 3 no stereo group by ident plot prep}
-describe(EDBFI_mod3$identification_c)
+```{r model 3 bfi no stereo group by ident plot prep}
+describe(dataBFI_mod3$identification_c)
 
-mod3nostereo_proj_ident_effects <- effect(term = "self_c:group_cond:identification_c", 
+mod3BFInostereo_proj_ident_group_effects <- effect(term = "self_c:group_cond:identification_c", 
                            xlevels = list(group_cond = c("In-group", 
                                                          "Out-group"), 
                                          identification_c = c(-1.27, 0, 1.27)), 
-                           mod = model3EDBFI_nostereo)
+                           mod = model3BFI_nostereo)
 
-mod3nostereo_proj_ident_effects <- as.data.frame(mod3nostereo_proj_ident_effects)
+mod3BFInostereo_proj_ident_group_effects<- as.data.frame(mod3BFInostereo_proj_ident_group_effects)
 
-mod3nostereo_proj_ident_effects %<>% 
+mod3BFInostereo_proj_ident_group_effects %<>% 
   mutate(Identification = as.factor(identification_c),
          Identification = dplyr::recode(Identification,
                                          `-1.27` = "Low identification \n (1 SD below)",
@@ -901,8 +904,8 @@ mod3nostereo_proj_ident_effects %<>%
                                          `1.27` = "High identificaiton \n (1 SD above)"))
 ```
 
-```{r model 3 no stereo group by ident plot}
-ggplot(mod3nostereo_proj_ident_effects, aes(self_c, 
+```{r model 3 bfi no stereo group by ident plot}
+ggplot(mod3BFInostereo_proj_ident_group_effects, aes(self_c, 
                                      fit, 
                                      group = group_cond,
                                      colour = group_cond)) +
@@ -914,40 +917,40 @@ ggplot(mod3nostereo_proj_ident_effects, aes(self_c,
   facet_grid(cols = vars(Identification)) +
   theme_minimal() +
   labs(title = "Pre-reg Model 3: Projection by identification and group membership",
-       subtitle = "Stereotyping removed for power",
-       x = "ED + BFI for self",
-       y = "ED + BFI for target",
+       subtitle = "Model only used BFI and stereotyping removed for power",
+       x = "BFI for self",
+       y = "BFI for target",
        linetype = "Group")
 ```
 
 As identification increases, out-group counter projection increases as well as in-group projection.
 
-```{r model 3 no stereo EDBFI main effect group plot}
-mod3EDBFI_nostereo_proj_group_plot <- get_groupME_proj_plot(model3EDBFI_nostereo)
+```{r model 3 no stereo BFI main effect group plot}
+mod3BFI_nostereo_proj_group_plot <- get_groupME_proj_plot(model3BFI_nostereo)
 
-mod3EDBFI_nostereo_proj_group_plot +
+mod3BFI_nostereo_proj_group_plot +
   labs(title = "Model 3: Main effect of group on projection controlling for identification",
-       subtitle = "Using 'Everyday Likes' + BFI items when stereotyping removed",
-         x = "ED + BFI items for self",
-         y = "ED + BFI items for target",
+       subtitle = "Using BFI items when stereotyping removed",
+         x = "BFI items for self",
+         y = "BFI items for target",
          linetype = "Group")
 ```
 
-Without stereotyping but including everyday likes and BFI, we see counter projection for out-group targets and regular projection for in-group targets.
+Without stereotyping and only using BFI, we see counter projection for out-group targets and regular projection for in-group targets.
 
-```{r model 3 no stereo EDBFI prep main effect ident}
-mod3EDBFI_nostereo_proj_ident <- effect(term = "self_c:identification_c",
+```{r model 3 no stereo BFI prep main effect ident}
+mod3BFI_nostereo_proj_ident <- effect(term = "self_c:identification_c",
                            xlevels = list(identification_c = c(-1.27, 0, 1.27)), 
-                           mod = model3EDBFI_nostereo)
+                           mod = model3BFI_nostereo)
 
-mod3EDBFI_nostereo_proj_ident <- as.data.frame(mod3EDBFI_nostereo_proj_ident)
+mod3BFI_nostereo_proj_ident <- as.data.frame(mod3BFI_nostereo_proj_ident)
 
-mod3EDBFI_nostereo_proj_ident %<>% 
+mod3BFI_nostereo_proj_ident %<>% 
   mutate(Identification = as.factor(identification_c))
 ```
 
 ```{r Model 3 no stereo EDBFI main effect ident plot}
-ggplot(mod3EDBFI_nostereo_proj_ident, aes(self_c, fit, group = Identification)) +
+ggplot(mod3BFI_nostereo_proj_ident, aes(self_c, fit, group = Identification)) +
   geom_smooth(method = "lm", 
               se = FALSE, 
               size = .7, 
@@ -955,9 +958,9 @@ ggplot(mod3EDBFI_nostereo_proj_ident, aes(self_c, fit, group = Identification)) 
               aes(linetype = Identification)) +
   theme_minimal(base_size = 13) +
   labs(title = "Model 3: Main effect of identification on projection controlling for group",
-       subtitle = "Using 'Everyday Likes' + BFI items when stereotyping removed",
-         x = "ED + BFI items for self",
-         y = "ED + BFI items for target") +
+       subtitle = "Using BFI items when stereotyping removed",
+         x = "BFI items for self",
+         y = "BFI items for target") +
   scale_linetype_manual("Identification", breaks = c(-1.27, 0, 1.27), 
                        labels = c("Low (1 SD below)", 
                                   "Average", 
@@ -967,57 +970,58 @@ ggplot(mod3EDBFI_nostereo_proj_ident, aes(self_c, fit, group = Identification)) 
                                    "dotted"))
 ```
 
-On lower scores for ED + BFI, there is less difference in projection between identification groups. As ED and BFI scores increase, you see more projection in high identifiers compared to average and then low identifiers.
+On lower scores for BFI, there is less difference in projection between identification groups. As ED and BFI scores increase, you see more projection in high identifiers compared to average and then low identifiers.
 
-## Exploratory Model: W/ stereotyping
+## BFI w/ stereo
 
 ### Results
 
-```{r model 3 EDBFI results}
-model3EDBFI_stereo <- lmer(Targ ~ self_c*group_cond*stereo_c*identification_c + (self_c|sub_id), data = EDBFI_mod3)
+```{r model 3 BFI no stereo results}
+model3BFI_stereo <- lmer(TargBFI ~ self_c*group_cond*stereoBFI_c*identification_c + (self_c|sub_id), data = dataBFI_mod3)
 
-summary(model3EDBFI_stereo)
-confint(model3EDBFI_stereo)
+summary(model3BFI_stereo)
+confint(model3BFI_stereo)
 ```
 
-When BFI and ED are combined and added to a model controlled by stereotyping, the interaction between condition and identification on projection disappears. There is a significant main effect of identification on stereotyping as well as group on projection. There is also a significant interaction of group and identification on stereotyping.There is a marginal interaction of stereotyping and identification on projection collapsed across group
+When BFI is added to a model controlled by stereotyping, the interaction between condition and identification on projection disappears. There is a significant main effect of identification on stereotyping as well as group on projection. In addition, there is a significant interaction of stereotyping and group on projection. There is also a marginal interaction of group and identification on stereotyping. 
 
 ### Plots
 
-```{r model 3 EDBFI projection plot}
-mod3EDBFI_stereo_group_plot <- get_groupME_proj_plot(model3EDBFI_stereo)
+```{r model 3 BFI no stereo group projection plot}
+mod3BFI_stereo_group_plot <- get_groupME_proj_plot(model3BFI_stereo)
 
-mod3EDBFI_stereo_group_plot +
+mod3BFI_stereo_group_plot +
   labs(title = "Plot from Model 3: Effect of target group on projection",
        subtitle = "Controlled for stereotyping",
-       y = "BFI + ED ratings for target",
-       x = "BFI + ED ratings for stereotypical group member",
+       y = "BFI ratings for target",
+       x = "BFI ratings for stereotypical group member",
        linetype = "Group")
 ```
 
-Both projection and stereotyping plots are the same as the results from Model 3 using ED and BFI, indicating that adding identification into the model with the combined scales did not affect the main effects of projection and stereotyping by group. We still see slight counter projection with the out-group and positive projection with the in-group.
+Projection main effect results are the same as the exploratory model from Model 2 of the BFI with stereotyping in which stereotyping removes counter projection with out-group targets.
 
-```{r model 3 ED stereo x ident x proj int prep}
-describe(EDBFI_mod3$stereo_c)
+```{r model 3 BFI stereo x ident x proj int prep}
+describe(dataBFI_mod3$stereoBFI_c)
+describe(dataBFI_mod3$identification_c)
 
-mod3stereo_3way_effects <- effect(term = "self_c:stereo_c:identification_c", 
+mod3BFIstereo_3way_effects <- effect(term = "self_c:stereoBFI_c:identification_c", 
                            xlevels = list(identification_c = c(-1.27, 0, 1.27),
-                                          stereo_c = c(-1.18, 0, 1.18)), 
-                           mod = model3EDBFI_stereo)
+                                          stereoBFI_c = c(-1.22, 0, 1.22)), 
+                           mod = model3BFI_stereo)
 
-mod3stereo_3way_effects <- as.data.frame(mod3stereo_3way_effects)
+mod3BFIstereo_3way_effects <- as.data.frame(mod3BFIstereo_3way_effects)
 
-mod3stereo_3way_effects %<>% 
+mod3BFIstereo_3way_effects %<>% 
   mutate(Identification = as.factor(identification_c),
-         Stereotyping = as.factor(stereo_c),
+         Stereotyping = as.factor(stereoBFI_c),
          Stereotyping = dplyr::recode(Stereotyping,
-                                      `-1.18` = "Low stereotyping \n (1 SD below)",
+                                      `-1.22` = "Low stereotyping \n (1 SD below)",
                                       `0` = "Average \n stereotyping",
-                                      `1.18` = "High stereotyping \n (1 SD above")) 
+                                      `1.22` = "High stereotyping \n (1 SD above")) 
 ```
 
-```{r model 3 ED stereo x ident x proj int plot}
-ggplot(mod3stereo_3way_effects, aes(self_c, 
+```{r model 3 BFI stereo x ident x proj int plot}
+ggplot(mod3BFIstereo_3way_effects, aes(self_c, 
                                       fit, 
                                       group = Identification, 
                                       colour = Identification)) +
@@ -1027,9 +1031,9 @@ ggplot(mod3stereo_3way_effects, aes(self_c,
   theme_minimal() +
   theme(legend.key.size = unit(1, "cm")) +
   labs(title = "Model 3: Projection predicted by stereotyping and identification",
-       subtitle = "Projection using ED + BFI items",
-       x = "ED + BFI items for self",
-       y = "ED + BFI items for target") +
+       subtitle = "Projection using BFI items",
+       x = "BFI items for self",
+       y = "BFI items for target") +
     scale_linetype_manual("Identification", breaks = c(-1.27, 0, 1.27), 
                        labels = c("Low (1 SD below)", 
                                   "Average", 
@@ -1039,30 +1043,28 @@ ggplot(mod3stereo_3way_effects, aes(self_c,
                                    "dotted"))
 ```
 
-Collapsed across in and out-group target, people who apply less stereotypes to the target project more as in-group identification increases. Interestingly, people who demonstrate high use of stereotypes to the target exhibit the opposite pattern: low in-group identifiers project the most and as in-group identification increases, projection decreases. Average stereotype users all project around the same amount.
+Collapsed across target group, people who apply less stereotypes to the target project more as in-group identification increases. Interestingly, people who demonstrate high use of stereotypes to the target exhibit the opposite pattern: low in-group identifiers project the most and as in-group identification increases, projection decreases. Average stereotype users all project around the same amount.
 
 ```{r mod 3 stereo plot prep for stereo by ident}
-describe(EDBFI_mod3$stereo_c)
-
-mod3stereo_ident <- effect(term = "stereo_c:identification_c", 
+mod3BFI_stereoME_ident <- effect(term = "stereoBFI_c:identification_c", 
                            xlevels = list(identification_c = c(-1.27, 0, 1.27)), 
-                           mod = model3EDBFI_stereo)
+                           mod = model3BFI_stereo)
 
-mod3stereo_ident <- as.data.frame(mod3stereo_ident)
+mod3BFI_stereoME_ident <- as.data.frame(mod3BFI_stereoME_ident)
 
-mod3stereo_ident %<>% 
+mod3BFI_stereoME_ident %<>% 
   mutate(Identification = as.factor(identification_c))
 ```
 
 ```{r mod 3 stereo plot for stereo by ident}
-ggplot(mod3stereo_ident, aes(stereo_c, fit, group = Identification, colour = Identification)) +
+ggplot(mod3BFI_stereoME_ident, aes(stereoBFI_c, fit, group = Identification, colour = Identification)) +
   geom_smooth(method = "lm", se = FALSE, size = .7, colour = "black",
               aes(linetype = Identification)) +
   theme(legend.key.size = unit(1, "cm")) +
   labs(title = "Stereotyping by identification",
-       subtitle = "Using ED + BFI items",
-       x = "ED + BFI items for stereotypical group",
-       y = "ED + BFI items for target") +
+       subtitle = "Using BFI items",
+       x = "BFI items for stereotypical group",
+       y = "BFI items for target") +
   theme_minimal() +
    scale_linetype_manual("Identification", breaks = c(-1.27, 0, 1.27), 
                        labels = c("Low (1 SD below)", 
@@ -1076,16 +1078,14 @@ ggplot(mod3stereo_ident, aes(stereo_c, fit, group = Identification, colour = Ide
 As identification increases, stereotyping increases.
 
 ```{r model 3 ED stereo x ident x group int prep}
-describe(EDBFI_mod3$identification_c)
-
-mod3stereobygroupident <- effect(term = "group_cond:stereo_c:identification_c", 
+mod3BFI_stereobygroupident <- effect(term = "group_cond:stereoBFI_c:identification_c", 
                            xlevels = list(identification_c = c(-1.27, 0, 1.27),
                                           group_cond = c("In-group", "Out-group")), 
-                           mod = model3EDBFI_stereo)
+                           mod = model3BFI_stereo)
 
-mod3stereobygroupident <- as.data.frame(mod3stereobygroupident)
+mod3BFI_stereobygroupident <- as.data.frame(mod3BFI_stereobygroupident)
 
-mod3stereobygroupident %<>% 
+mod3BFI_stereobygroupident %<>% 
   mutate(Identification = as.factor(identification_c),
          Identification = dplyr::recode(Identification,
                                          `-1.27` = "Low identification \n (1 SD below)",
@@ -1094,7 +1094,7 @@ mod3stereobygroupident %<>%
 ```
 
 ```{r model 3 ED stereo x ident x group int plot}
-ggplot(mod3stereobygroupident, aes(stereo_c, 
+ggplot(mod3BFI_stereobygroupident, aes(stereoBFI_c, 
                                       fit, 
                                       group = group_cond, 
                                       colour = group_cond)) +
@@ -1104,13 +1104,208 @@ ggplot(mod3stereobygroupident, aes(stereo_c,
   theme_minimal() +
   theme(legend.key.size = unit(1, "cm")) +
   labs(title = "Marginal: Stereotyping by identification and group",
-       subtitle = "Using ED + BFI items",
-       x = "ED + BFI items for stereotypical group",
-       y = "ED + BFI items for target",
+       subtitle = "Using BFI items",
+       x = "BFI items for stereotypical group",
+       y = "BFI items for target",
        linetype = "Group")
 ```
 
-This effect was not significant. We plotted for comparison.
+This effect was marginal and appears to be driven by differences in stereotyping in high identifiers between target groups, in which they stereotype their in-group more than their out-group.
+
+## ED w/o stereo
+
+```{r mod 3 data ED, include = FALSE}
+dataED_mod3  <- clean_ptcheck %>% 
+  select(sub_id, BFI_number, BFI_target_group, TargED, selfED_c, group_cond, 
+         opin_pol_combined, stereoED_c, identification_c) %>% 
+  # changing name for plot function
+  mutate(self_c = selfED_c) %>% 
+  na.omit() %>% 
+  unique()
+```
+
+### Results
+
+```{r model 3 ED no stereo results}
+model3ED_nostereo <- lmer(TargED ~ self_c*group_cond*identification_c + (self_c|sub_id),
+               data = dataED_mod3)
+
+summary(model3ED_nostereo)
+confint(model3ED_nostereo)
+```
+
+When only using ED, the significant effect of group remains and there is a marginal interaction with identification.
+
+### Plots
+
+```{r model 3 ed no stereo group by ident plot prep}
+describe(dataED_mod3$identification_c)
+
+mod3EDnostereo_proj_ident_group_effects <- effect(term = "self_c:group_cond:identification_c", 
+                           xlevels = list(group_cond = c("In-group", 
+                                                         "Out-group"), 
+                                         identification_c = c(-1.28, 0, 1.28)), 
+                           mod = model3ED_nostereo)
+
+mod3EDnostereo_proj_ident_group_effects<- as.data.frame(mod3EDnostereo_proj_ident_group_effects)
+
+mod3EDnostereo_proj_ident_group_effects %<>% 
+  mutate(Identification = as.factor(identification_c),
+         Identification = dplyr::recode(Identification,
+                                         `-1.28` = "Low identification \n (1 SD below)",
+                                         `0` = "Average \n identification",
+                                         `1.28` = "High identificaiton \n (1 SD above)"))
+```
+
+```{r model 3 ED no stereo group by ident plot}
+ggplot(mod3EDnostereo_proj_ident_group_effects, aes(self_c, 
+                                     fit, 
+                                     group = group_cond,
+                                     colour = group_cond)) +
+  geom_smooth(method = "lm", 
+              size = .7, 
+              colour = "black",
+              aes(linetype = group_cond,
+                  min = lower,
+                  max = upper),
+              stat = "identity") +
+  facet_grid(cols = vars(Identification)) +
+  theme_minimal() +
+  labs(title = "Model 3: Projection by identification and group membership",
+       subtitle = "Model only used ED and stereotyping removed for power",
+       x = "ED for self",
+       y = "ED for target",
+       linetype = "Group")
+```
+
+As identification increases, out-group counter projection increases slightly, but in-group projection increases more dramatically. This effect was marginal, as can be seen by confidence interval bars.
+
+```{r model 3 no stereo ED main effect group plot}
+mod3ED_nostereo_proj_group_plot <- get_groupME_proj_plot(model3ED_nostereo)
+
+mod3ED_nostereo_proj_group_plot +
+  labs(title = "Model 3: Main effect of group on projection controlling for identification",
+       subtitle = "Using ED items when stereotyping removed",
+         x = "ED items for self",
+         y = "ED items for target",
+         linetype = "Group")
+```
+
+Without stereotyping and only using ED, we see counter projection for out-group targets and regular projection for in-group targets.
+
+## ED w/ stereo
+
+```{r model 3 ED stereo results}
+model3ED_stereo <- lmer(TargED ~ self_c*group_cond*identification_c*stereoED_c + (self_c|sub_id),
+               data = dataED_mod3)
+
+summary(model3ED_stereo)
+confint(model3ED_stereo)
+```
+
+When including stereotyping, the main effect of group on projection is still significant, but the marginal interaction with identification disappears. 
+
+Stereotyping interacts with projection with following variables:
+ * Self, group, and stereo
+ * Self, group, identification, and stereo
+
+### Plots
+
+```{r model 3 stereo ED main effect group plot}
+mod3ED_stereo_proj_group_plot <- get_groupME_proj_plot(model3ED_stereo)
+
+mod3ED_stereo_proj_group_plot +
+  labs(title = "Model 3: Main effect of group on projection controlling for identification",
+       subtitle = "Using ED items controlling for stereotyping",
+         x = "ED items for self",
+         y = "ED items for target",
+         linetype = "Group")
+```
+
+As in Model 2, when adding stereotyping as a moderator, counter projection with out-groups is not reduced. Instead, projection with in-groups is reduced. Interestingly, with identification as a moderator, projection with in-group targets gains a slight negative slope as well.
+
+```{r model 3 ED stereo x group x proj int prep}
+describe(dataED_mod3$stereoED_c)
+
+mod3EDstereo_3way_effects <- effect(term = "self_c:group_cond:stereoED_c", 
+                           xlevels = list(group_cond = c("In-group", 
+                                                         "Out-group"),
+                                          stereoED_c = c(-1.04, 0, 1.04)), 
+                           mod = model3ED_stereo)
+
+mod3EDstereo_3way_effects <- as.data.frame(mod3EDstereo_3way_effects)
+
+mod3EDstereo_3way_effects %<>% 
+  mutate(Stereotyping = as.factor(stereoED_c),
+         Stereotyping = dplyr::recode(Stereotyping,
+                                      `-1.04` = "Low stereotyping \n (1 SD below)",
+                                      `0` = "Average \n stereotyping",
+                                      `1.04` = "High stereotyping \n (1 SD above")) 
+```
+
+```{r model 3 ED stereo x group x proj int plot}
+ggplot(mod3EDstereo_3way_effects, aes(self_c, 
+                                      fit, 
+                                      group = group_cond, 
+                                      colour = group_cond)) +
+  geom_smooth(method = "lm", se = FALSE, size = .7, colour = "black",
+              aes(linetype = group_cond)) +
+  facet_wrap(vars(Stereotyping)) +
+  theme_minimal() +
+  theme(legend.key.size = unit(1, "cm")) +
+  labs(title = "Model 3: Projection predicted by stereotyping and target group",
+       subtitle = "Projection using ED items",
+       x = "ED items for self",
+       y = "ED items for target",
+       linetype = "Group")
+```
+
+Counter projection with out-group targets using ED remains the same regardless of stereotype use. People who use large amounts of stereotypes, project positively with their in-group. As stereotype use decreases, in-group projection decreases, ultimately becoming counter projection with low stereotype users.
+
+```{r model 3 ED stereo x group x proj int prep}
+describe(dataED_mod3$stereoED_c)
+describe(dataED_mod3$identification_c)
+
+mod3EDstereo_4way_effects <- effect(term = "self_c:group_cond:identification_c:stereoED_c", 
+                           xlevels = list(group_cond = c("In-group", 
+                                                         "Out-group"),
+                                          stereoED_c = c(-1.04, 0, 1.04),
+                                          identification_c = c(-1.28, 0 , 1.28)), 
+                           mod = model3ED_stereo)
+
+mod3EDstereo_4way_effects <- as.data.frame(mod3EDstereo_4way_effects)
+
+mod3EDstereo_4way_effects %<>% 
+  mutate(Stereotyping = as.factor(stereoED_c),
+         Stereotyping = dplyr::recode(Stereotyping,
+                                      `-1.04` = "Low stereotyping \n (1 SD below)",
+                                      `0` = "Average \n stereotyping",
+                                      `1.04` = "High stereotyping \n (1 SD above"),
+         Identification = as.factor(identification_c),
+         Identification = dplyr::recode(Identification,
+                                        `-1.28` = "Low identification \n (1 SD below)",
+                                        `0` = "Average \n identification",
+                                        `1.28` = "High identification \n (1 SD above)")) 
+```
+
+```{r model 3 ED stereo x group x proj int plot}
+ggplot(mod3EDstereo_4way_effects, aes(self_c, 
+                                      fit, 
+                                      group = group_cond, 
+                                      colour = group_cond)) +
+  geom_smooth(method = "lm", se = FALSE, size = .7, colour = "black",
+              aes(linetype = group_cond)) +
+  facet_grid(vars(Stereotyping), vars(Identification)) +
+  theme_minimal() +
+  theme(legend.key.size = unit(1, "cm")) +
+  labs(title = "Model 3: Projection predicted by stereotyping and target group",
+       subtitle = "Projection using ED items",
+       x = "ED items for self",
+       y = "ED items for target",
+       linetype = "Group")
+```
+
+Counter projection with out-group targets is unaffected, the interaction is with in-group targets. Within low identifiers, as stereotype use increases, people go from counter projecting to projecting positively with their in-group. Average identifiers who are using little stereotypes do not counter project as much as low identifiers, though the slope only increases to become slightly positive as stereotype use increases among average identifiers. Among high identifiers, the pattern is opposite that of low identifiers: those who stereotype less project positively with their in-group, while, as stereotype use increases, positive projection disappears and becomes counter projection.
 
 # Exp Model 4 from Pre-reg {.tabset .tabset-fade .tabset-pills}
 
