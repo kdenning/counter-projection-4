@@ -1753,6 +1753,7 @@ mod_opin_ED <- lmer(TargED ~ group_cond*selfED_c*opin_pol_combined +
                data = mod_opin_ed_data)
 
 summary(mod_opin_ED)
+confint(mod_opin_ED)
 ```
 
 #### Plot ME Opinion
