@@ -566,10 +566,10 @@ confint(model1)
 ```{r function for group main effect plots}
 ##### Function to obtain and clean data from model & run base plot for ME group on projection #####
 get_groupME_proj_plot <- function(x){
-  effects_data <- effect(term = "self_c:group_cond", 
-         xlevels = list(group_cond = c("In-group", "Out-group")), 
+  effects_data <- effect(term = "self_c:group_cond",
+         xlevels = list(group_cond = c("In-group", "Out-group")),
          mod = x)
-  
+
   effects_data <- as.data.frame(effects_data)
   
   groupME_plot <- ggplot(effects_data, aes(self_c, fit, group = group_cond)) +
@@ -587,14 +587,26 @@ get_groupME_proj_plot <- function(x){
 
 
 ```{r ME group model 1 plot}
+# Function to print plots to pngs for paper
+# ggpreview <- function(...) {
+#   fname <- tempfile(fileext = ".png")
+#   ggsave(filename = fname, ...)
+#   system2("open", fname)
+#   invisible(NULL)
+# }
+
+knitr::opts_chunk$set(fig.width = 8, fig.height = 6) 
+
 model1_plot <- get_groupME_proj_plot(model1)
 
 model1_plot + 
-  labs(title = "Plot from Model 1: Main effect of target group on projection",
+  labs(title = "Model 1: Projection predicted by target group",
        subtitle = "Projection using BFI",
        x = "Personality responses for self",
        y = "Personality responses for target",
        linetype = "Group")
+
+# ggpreview(width = 8, height = 6, units = "in")
 
 #Murat's alternative in interact plot if I want to use it in the future
 #interactions::interact_plot(model1, pred = "self_c", modx = "group_cond", plot.points = F, interval = F)
@@ -637,14 +649,18 @@ confint(model2ED_nostereo)
 ### Plots
 
 ```{r model 2 ED plot main effect group}
+knitr::opts_chunk$set(fig.width = 8, fig.height = 6) 
+
 model2group_plot_EDnostereo <- get_groupME_proj_plot(model2ED_nostereo)
 
 model2group_plot_EDnostereo +
-  labs(title = "Model 2: Main effect of target group on projection",
-       subtitle = "Projection using 'Everyday Likes' (ED) items before stereotyping added",
-       x = "ED items for self",
-       y = "ED items for target",
+  labs(title = "Exploratory Model 2: Projection predicted by target group",
+       subtitle = "Projection using ELI",
+       x = "ELI items for self",
+       y = "ELI items for target",
        linetype = "Group")
+
+# ggpreview(width = 8, height = 6, units = "in")
 ```
 
 Without stereotyping, we see even more extreme counter projection.
@@ -667,14 +683,18 @@ We removed random slopes for the selfED_c predictor and then the model converged
 ### Plots
 
 ```{r model 2 ED plot main effect group with stereo}
+knitr::opts_chunk$set(fig.width = 8, fig.height = 6) 
+
 model2group_plot_EDwstereo <- get_groupME_proj_plot(model2EDwstereo)
 
 model2group_plot_EDwstereo +
-  labs(title = "Model 2: Main effect of target group on projection",
-       subtitle = "Projection using ED likes items controlling for stereotyping",
-       x = "ED items for self",
-       y = "ED items for target",
+  labs(title = "Exploratory Model 2: Projection predicted by target group",
+       subtitle = "Projection using ELI controlled for stereotyping",
+       x = "ELI items for self",
+       y = "ELI items for target",
        linetype = "Group")
+
+# ggpreview(width = 8, height = 6, units = "in")
 ```
 
 We still see counter projection, even when controlling for stereotyping.
@@ -769,14 +789,18 @@ The main effect of selfBFI_c:group_cond did not disappear when including stereot
 ### Plots
 
 ```{r model 2 main effect group}
+knitr::opts_chunk$set(fig.width = 8, fig.height = 6) 
+
 model2group_plot_bfistereo <- get_groupME_proj_plot(model2_bfistereo_resuts)
 
 model2group_plot_bfistereo +
-  labs(title = "Model 2: Main effect of target group on projection using BFI",
-       subtitle = "Controlling for stereotyping",
+  labs(title = "Exploratory Model 2: Projection predicted by target group",
+       subtitle = "Projection using BFI controlled for stereotyping",
        x = "Personality responses for self",
        y = "Personality responses for target",
        linetype = "Group")
+
+# ggpreview(width = 8, height = 6, units = "in")
 ```
 
 When controlling for stereotyping, the counter projection found earlier does disappear. This is in contrast with the exploratory results of my FYP with MFQ.
@@ -804,6 +828,8 @@ model2_bfistereo_int_effects %<>%
 ```
 
 ```{r model 2 interaction plot with stereo}
+knitr::opts_chunk$set(fig.width = 8, fig.height = 6) 
+
 ggplot(model2_bfistereo_int_effects, aes(self_c, 
                                      fit, 
                                      group = group_cond,
@@ -812,11 +838,13 @@ ggplot(model2_bfistereo_int_effects, aes(self_c,
               aes(linetype = group_cond)) +
   facet_grid(cols = vars(Stereotyping)) +
   theme_minimal() +
-  labs(title = "Model 2: Projection by stereotype use and group membership",
-       subtitle = "Using BFI only - not explicitly pre-registered",
+  labs(title = "Exploratory Model 2: Projection predicted by stereotype use and target group",
+       subtitle = "Projection using BFI only",
        x = "Personality traits for self",
        y = "Personality traits for target",
        linetype = "Group")
+
+# ggpreview(width = 8, height = 6, units = "in")
 ```
 
 It appears that as stereotype use increases, the intercept for projection for both in-group and out-group increases and the difference between groups increases as well. People are projecting more for their in-group when they stereotype the least, but also appear to be projecting less with their out-group in that same condition, though the slopes for projection are much flatter. There are no flat or negative slopes for out-group projection in this plot. 
@@ -952,7 +980,7 @@ ggplot(mod2EDBFI_targ_stereo_effects, aes(stereo_c, fit, group = group_cond)) +
               colour = "black", 
               aes(linetype = group_cond)) +
   theme_minimal() +
-  labs(title = "Pre-reg Model 2: NS Effect of target group on stereotyping",
+  labs(title = "Model 2: NS Effect of target group on stereotyping",
        subtitle = "Higher correspondence between BFI + ED ratings indicates more stereotyping",
        y = "BFI + ED ratings for target",
        x = "BFI + ED ratings for stereotypical group member",
@@ -962,14 +990,18 @@ ggplot(mod2EDBFI_targ_stereo_effects, aes(stereo_c, fit, group = group_cond)) +
 People stereotype their in-group and out-group to a similar extent, but the intercept differs. This does not support our Confirmatory Prediction #2: "People will stereotype the out-group target more than the in-group target due to out-group homogeneity."  
 
 ```{r model 2 EDBFI projection plot}
+knitr::opts_chunk$set(fig.width = 8, fig.height = 6) 
+
 model2group_plot_EDBFI_stereo <- get_groupME_proj_plot(model2EDBFI_stereo)
 
 model2group_plot_EDBFI_stereo +
-  labs(title = "Pre-reg Model 2: Effect of target group on projection",
-       subtitle = "Controlled for stereotyping",
-       y = "BFI + ED ratings for target",
-       x = "BFI + ED ratings for self",
+  labs(title = "Model 2: Projection predicted by target group",
+       subtitle = "Projection using BFI + ELI and controlled for stereotyping",
+       y = "BFI + ELI ratings for target",
+       x = "BFI + ELI ratings for self",
        linetype = "Group") 
+
+# ggpreview(width = 8, height = 6, units = "in")
 ```
 
 When everyday likes items are added to the BFI, even with stereotyping controlled for in the model, we see slight counter projection with the out-group target. This corresponds with Confirmatory Prediction #3: "even with stereotyping as a predictor, projection will still explain variance in ratings of the target, producing the significant main effect predicted above and no model singularities (in other words, how the participant rates the Self and the Stereotypical target will each predict unique variance in ratings of the target;  moreover, the model with both of predictors included will not be singular). Although stereotyping may interact with projection as well (we found this in an earlier study), we do not expect the projection-only effects to go away."
@@ -1003,6 +1035,13 @@ dataBFI_mod3 %>%
 
 ### Results
 
+#### Contrasts
+
+```{r model 3 bfi contrasts, include = FALSE}
+contrasts(dataBFI_mod3$group_cond) <- contr.sum(2)
+contrasts(dataBFI_mod3$group_cond)
+```
+
 ```{r model 3 EDBFI no stereo results}
 model3BFI_nostereo <- lmer(TargBFI ~ self_c*group_cond*identification_c + (self_c|sub_id),
                data = dataBFI_mod3)
@@ -1035,6 +1074,8 @@ mod3BFInostereo_proj_ident_group_effects %<>%
 ```
 
 ```{r model 3 bfi no stereo group by ident plot}
+knitr::opts_chunk$set(fig.width = 8, fig.height = 6) 
+
 ggplot(mod3BFInostereo_proj_ident_group_effects, aes(self_c, 
                                      fit, 
                                      group = group_cond,
@@ -1046,24 +1087,30 @@ ggplot(mod3BFInostereo_proj_ident_group_effects, aes(self_c,
               aes(linetype = group_cond)) +
   facet_grid(cols = vars(Identification)) +
   theme_minimal() +
-  labs(title = "Pre-reg Model 3: Projection by identification and group membership",
-       subtitle = "Model only used BFI and stereotyping removed for power",
+  labs(title = "Model 3: Projection predicted by identification and target group",
+       subtitle = "Pre-registered model used BFI and stereotyping was removed for power",
        x = "BFI for self",
        y = "BFI for target",
        linetype = "Group")
+
+# ggpreview(width = 8, height = 6, units = "in")
 ```
 
 As identification increases, out-group counter projection increases as well as in-group projection.
 
 ```{r model 3 no stereo BFI main effect group plot}
+knitr::opts_chunk$set(fig.width = 8, fig.height = 6)
+
 mod3BFI_nostereo_proj_group_plot <- get_groupME_proj_plot(model3BFI_nostereo)
 
 mod3BFI_nostereo_proj_group_plot +
-  labs(title = "Model 3: Main effect of group on projection controlling for identification",
-       subtitle = "Using BFI items when stereotyping removed",
+  labs(title = "Model 3: Projection predicted by group",
+       subtitle = "Pre-registered model used BFI and stereotyping was removed for power",
          x = "BFI items for self",
          y = "BFI items for target",
          linetype = "Group")
+
+# ggpreview(width = 8, height = 6, units = "in")
 ```
 
 Without stereotyping and only using BFI, we see counter projection for out-group targets and regular projection for in-group targets.
@@ -1080,6 +1127,8 @@ mod3BFI_nostereo_proj_ident %<>%
 ```
 
 ```{r Model 3 no stereo EDBFI main effect ident plot}
+knitr::opts_chunk$set(fig.width = 8, fig.height = 6) 
+
 ggplot(mod3BFI_nostereo_proj_ident, aes(self_c, fit, group = Identification)) +
   geom_smooth(method = "lm", 
               se = FALSE, 
@@ -1087,8 +1136,8 @@ ggplot(mod3BFI_nostereo_proj_ident, aes(self_c, fit, group = Identification)) +
               colour = "black", 
               aes(linetype = Identification)) +
   theme_minimal(base_size = 13) +
-  labs(title = "Model 3: Main effect of identification on projection controlling for group",
-       subtitle = "Using BFI items when stereotyping removed",
+  labs(title = "Model 3: Projection predicted by identification",
+       subtitle = "Pre-registered model used BFI and stereotyping was removed for power",
          x = "BFI items for self",
          y = "BFI items for target") +
   scale_linetype_manual("Identification", breaks = c(-1.27, 0, 1.27), 
@@ -1098,6 +1147,8 @@ ggplot(mod3BFI_nostereo_proj_ident, aes(self_c, fit, group = Identification)) +
                        values = c("solid", 
                                    "twodash", 
                                    "dotted"))
+
+# ggpreview(width = 8, height = 6, units = "in")
 ```
 
 On lower scores for BFI, there is less difference in projection between identification groups. As ED and BFI scores increase, you see more projection in high identifiers compared to average and then low identifiers.
@@ -1256,6 +1307,11 @@ dataED_mod3  <- clean_ptcheck %>%
 
 ### Results
 
+```{r model 3 ed contrasts, include = FALSE}
+contrasts(dataED_mod3$group_cond) <- contr.sum(2)
+contrasts(dataED_mod3$group_cond)
+```
+
 ```{r model 3 ED no stereo results}
 model3ED_nostereo <- lmer(TargED ~ self_c*group_cond*identification_c + (self_c|sub_id),
                data = dataED_mod3)
@@ -1288,6 +1344,8 @@ mod3EDnostereo_proj_ident_group_effects %<>%
 ```
 
 ```{r model 3 ED no stereo group by ident plot}
+knitr::opts_chunk$set(fig.width = 8, fig.height = 6)
+
 ggplot(mod3EDnostereo_proj_ident_group_effects, aes(self_c, 
                                      fit, 
                                      group = group_cond,
@@ -1295,17 +1353,16 @@ ggplot(mod3EDnostereo_proj_ident_group_effects, aes(self_c,
   geom_smooth(method = "lm", 
               size = .7, 
               colour = "black",
-              aes(linetype = group_cond,
-                  min = lower,
-                  max = upper),
-              stat = "identity") +
+              aes(linetype = group_cond)) +
   facet_grid(cols = vars(Identification)) +
   theme_minimal() +
-  labs(title = "Model 3: Projection by identification and group membership",
-       subtitle = "Model only used ED and stereotyping removed for power",
-       x = "ED for self",
-       y = "ED for target",
+  labs(title = "Exploratory Model 3: Projection by identification and target group",
+       subtitle = "Projection using ELI",
+       x = "ELI for self",
+       y = "ELI for target",
        linetype = "Group")
+
+# ggpreview(width = 8, height = 6, units = "in")
 ```
 
 As identification increases, out-group counter projection increases slightly, but in-group projection increases more dramatically. This effect was marginal, as can be seen by confidence interval bars.
@@ -1419,6 +1476,8 @@ mod3EDstereo_4way_effects %<>%
 ```
 
 ```{r model 3 ED stereo x group x proj x ident int plot}
+knitr::opts_chunk$set(fig.width = 8, fig.height = 6)
+
 ggplot(mod3EDstereo_4way_effects, aes(self_c, 
                                       fit, 
                                       group = group_cond, 
@@ -1428,11 +1487,13 @@ ggplot(mod3EDstereo_4way_effects, aes(self_c,
   facet_grid(vars(Stereotyping), vars(Identification)) +
   theme_minimal() +
   theme(legend.key.size = unit(1, "cm")) +
-  labs(title = "Model 3: Projection predicted by stereotyping and target group",
-       subtitle = "Projection using ED items",
-       x = "ED items for self",
-       y = "ED items for target",
+  labs(title = "Exploratory Model 3: Projection by stereotyping, identification, and target group",
+       subtitle = "Projection using ELI items",
+       x = "ELI items for self",
+       y = "ELI items for target",
        linetype = "Group")
+
+# ggpreview(width = 8, height = 6, units = "in")
 ```
 
 Counter projection with out-group targets is unaffected, the interaction is with in-group targets. Within low identifiers, as stereotype use increases, people go from counter projecting to projecting positively with their in-group. Average identifiers who are using little stereotypes do not counter project as much as low identifiers, though the slope only increases to become slightly positive as stereotype use increases among average identifiers. Among high identifiers, the pattern is opposite that of low identifiers: those who stereotype less project positively with their in-group, while, as stereotype use increases, positive projection disappears and becomes counter projection.
@@ -1613,6 +1674,8 @@ mod4_polar_ME_effects %<>%
 ```
 
 ```{r model 4 perceived polar ME plot}
+knitr::opts_chunk$set(fig.width = 8, fig.height = 6)
+
 ggplot(mod4_polar_ME_effects, aes(self_c, 
                                       fit, 
                                       group = Polarization, 
@@ -1620,13 +1683,14 @@ ggplot(mod4_polar_ME_effects, aes(self_c,
   geom_smooth(method = "lm", se = FALSE, size = .7, colour = "black",
               aes(linetype = Polarization)) +
   theme_minimal() +
-  theme(legend.key.size = unit(1, "cm"),
-        legend.title = element_blank()) +
-  labs(title = "Model 4: Projection predicted by perceived polarization",
-       subtitle = "Projection using ED items",
-       x = "ED items for self",
-       y = "ED items for target",
+  theme(legend.key.size = unit(1, "cm")) +
+  labs(title = "Projection predicted by polarization",
+       subtitle = "Exploratory model with projection using ELI items",
+       x = "ELI items for self",
+       y = "ELI items for target",
        linetype = "Polarization")
+
+# ggpreview(width = 8, height = 6, units = "in")
 ```
 
 #### Group x Polarization Int Plot
@@ -1650,6 +1714,8 @@ mod4_polar_effects %<>%
 ```
 
 ```{r model 4 perceived polar 3 way plot}
+knitr::opts_chunk$set(fig.width = 8, fig.height = 6)
+
 ggplot(mod4_polar_effects, aes(self_c, 
                                       fit, 
                                       group = group_cond, 
@@ -1658,13 +1724,14 @@ ggplot(mod4_polar_effects, aes(self_c,
               aes(linetype = group_cond)) +
   facet_wrap(vars(Polarization)) +
   theme_minimal() +
-  theme(legend.key.size = unit(1, "cm"),
-        legend.title = element_blank()) +
-  labs(title = "Model 4: Projection predicted by group and perceived polarization",
-       subtitle = "Projection using ED items",
-       x = "ED items for self",
-       y = "ED items for target",
+  theme(legend.key.size = unit(1, "cm")) +
+  labs(title = "Projection predicted by target group and polarization",
+       subtitle = "Exploratory model with projection using ELI items",
+       x = "ELI items for self",
+       y = "ELI items for target",
        linetype = "Group")
+
+# ggpreview(width = 8, height = 6, units = "in")
 ```
 
 At low polarization, we see slight positive projection with the out-group. However, once people regard polarization as average, we see steep counter projection that increases with high polarization. In-group projection remains similar across polarization, with the only change being an increase in intercept. This effect is marginal with stereotyping included in the model.
