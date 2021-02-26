@@ -2143,6 +2143,7 @@ consc_model <- lmer(TargBFI ~ self_c*group_cond*stereoBFI_c  +
                data = consc_data)
 
 summary(consc_model)
+confint(consc_model)
 ```
 
 ### Plot
