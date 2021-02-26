@@ -1929,3 +1929,268 @@ pol_know_nostereo_plot +
        x = "BFI + ED ratings for stereotypical group member",
        linetype = "Group")
 ```
+
+# BFI broken down into facets
+
+## Extraversion
+
+```{r extra data}
+extra_mod_data <- clean_ptcheck %>% 
+  select(sub_id, BFI_number, TargBFI, selfBFI_c, stereoBFI_c, group_cond, 
+         identification_c) %>% 
+  filter(BFI_number == 1 | BFI_number == 6 | BFI_number == 11) %>% 
+  rename(self_c = selfBFI_c) %>% 
+  unique() %>% 
+  na.omit()
+
+contrasts(extra_mod_data$group_cond) <- contr.sum(2)
+```
+
+### Results
+
+```{r extra model}
+extra_model <- lmer(TargBFI ~ self_c*group_cond*stereoBFI_c  +
+                        + (self_c|sub_id),
+               data = extra_mod_data)
+
+summary(extra_model)
+```
+
+### Plot
+
+```{r extra plot}
+extra_plot <- get_groupME_proj_plot(extra_model)
+
+extra_plot + 
+  labs(title = "Projection predicted by target group",
+       subtitle = "Projection using extraversion controlled for stereotyping",
+       x = "Extraversion for self",
+       y = "Extraversion for target",
+       linetype = "Group")
+```
+
+Effect was marginal only
+
+## Agreeableness
+
+```{r agree data}
+agree_mod_data <- clean_ptcheck %>% 
+  select(sub_id, BFI_number, TargBFI, selfBFI_c, stereoBFI_c, group_cond, 
+         identification_c) %>% 
+  filter(BFI_number == 2 | BFI_number == 7 | BFI_number == 12) %>% 
+  rename(self_c = selfBFI_c) %>% 
+  unique() %>% 
+  na.omit()
+
+contrasts(agree_mod_data$group_cond) <- contr.sum(2)
+```
+
+### Results
+
+```{r agree model}
+agree_model <- lmer(TargBFI ~ self_c*group_cond*stereoBFI_c  +
+                        + (self_c|sub_id),
+               data = agree_mod_data)
+
+summary(agree_model)
+```
+
+### Plot
+
+```{r agree plot set-up}
+describe(agree_mod_data$stereoBFI_c)
+
+agree_effects <- effect(term = "self_c:group_cond:stereoBFI_c", 
+                           xlevels = list(group_cond = c("In-group", 
+                                                         "Out-group"),
+                                          stereoBFI_c = c(-1.33, 0, 1.33)), 
+                           mod = agree_model)
+
+agree_effects <- as.data.frame(agree_effects)
+
+agree_effects %<>% 
+  mutate(Stereotyping = as.factor(stereoBFI_c),
+         Stereotyping = dplyr::recode(Stereotyping,
+                                      `-1.33` = "Low stereotyping \n (1 SD below)",
+                                      `0` = "Average \n stereotyping",
+                                      `1.33` = "High stereotyping \n (1 SD above")) 
+
+```
+
+```{r agree plot}
+ggplot(agree_effects, aes(self_c, 
+                                      fit, 
+                                      group = group_cond, 
+                                      colour = group_cond)) +
+  geom_smooth(method = "lm", se = FALSE, size = .7, colour = "black",
+              aes(linetype = group_cond)) +
+  facet_wrap(vars(Stereotyping)) +
+  theme_minimal() +
+  theme(legend.key.size = unit(1, "cm")) +
+  labs(title = "Projection predicted by stereotyping and target group",
+       subtitle = "Projection using agreeableness",
+       x = "Agreeableness for self",
+       y = "Agreeableness for target",
+       linetype = "Group")
+```
+
+## Negative emotion
+
+```{r neg emo data}
+negemo_data <- clean_ptcheck %>% 
+  select(sub_id, BFI_number, TargBFI, selfBFI_c, stereoBFI_c, group_cond, 
+         identification_c) %>% 
+  filter(BFI_number == 4 | BFI_number == 9 | BFI_number == 14) %>% 
+  rename(self_c = selfBFI_c) %>% 
+  unique() %>% 
+  na.omit()
+
+contrasts(negemo_data$group_cond) <- contr.sum(2)
+```
+
+### Results
+
+```{r negemo model}
+negemo_model <- lmer(TargBFI ~ self_c*group_cond*stereoBFI_c  +
+                        + (self_c|sub_id),
+               data = negemo_data)
+
+summary(negemo_model)
+```
+
+No results with projection
+
+## Open minded
+
+```{r open minded data}
+open_data <- clean_ptcheck %>% 
+  select(sub_id, BFI_number, TargBFI, selfBFI_c, stereoBFI_c, group_cond, 
+         identification_c) %>% 
+  filter(BFI_number == 5 | BFI_number == 10 | BFI_number == 15) %>% 
+  rename(self_c = selfBFI_c) %>% 
+  unique() %>% 
+  na.omit()
+
+contrasts(open_data$group_cond) <- contr.sum(2)
+```
+
+### Results
+
+```{r open model}
+open_model <- lmer(TargBFI ~ self_c*group_cond*stereoBFI_c  +
+                        + (self_c|sub_id),
+               data = open_data)
+
+summary(open_model)
+```
+
+```{r open plot set-up}
+describe(open_data$stereoBFI_c)
+
+open_effects <- effect(term = "self_c:group_cond:stereoBFI_c", 
+                           xlevels = list(group_cond = c("In-group", 
+                                                         "Out-group"),
+                                          stereoBFI_c = c(-1.28, 0, 1.28)), 
+                           mod = open_model)
+
+open_effects <- as.data.frame(open_effects)
+
+open_effects %<>% 
+  mutate(Stereotyping = as.factor(stereoBFI_c),
+         Stereotyping = dplyr::recode(Stereotyping,
+                                      `-1.28` = "Low stereotyping \n (1 SD below)",
+                                      `0` = "Average \n stereotyping",
+                                      `1.28` = "High stereotyping \n (1 SD above")) 
+
+```
+
+```{r open plot}
+ggplot(open_effects, aes(self_c, 
+                                      fit, 
+                                      group = group_cond, 
+                                      colour = group_cond)) +
+  geom_smooth(method = "lm", se = FALSE, size = .7, colour = "black",
+              aes(linetype = group_cond)) +
+  facet_wrap(vars(Stereotyping)) +
+  theme_minimal() +
+  theme(legend.key.size = unit(1, "cm")) +
+  labs(title = "Projection predicted by stereotyping and target group",
+       subtitle = "Projection using Openness",
+       x = "Openness for self",
+       y = "Openess for target",
+       linetype = "Group")
+```
+
+## Conscientious
+
+```{r consc data}
+consc_data <- clean_ptcheck %>% 
+  select(sub_id, BFI_number, TargBFI, selfBFI_c, stereoBFI_c, group_cond, 
+         identification_c) %>% 
+  filter(BFI_number == 3 | BFI_number == 8 | BFI_number == 13) %>% 
+  rename(self_c = selfBFI_c) %>% 
+  unique() %>% 
+  na.omit()
+
+contrasts(consc_data$group_cond) <- contr.sum(2)
+```
+
+### Results
+
+```{r consc model}
+consc_model <- lmer(TargBFI ~ self_c*group_cond*stereoBFI_c  +
+                        + (self_c|sub_id),
+               data = consc_data)
+
+summary(consc_model)
+```
+
+### Plot
+
+```{r consc plot}
+consc_plot <- get_groupME_proj_plot(consc_model)
+
+consc_plot + 
+  labs(title = "Projection predicted by target group",
+       subtitle = "Projection using conscientiousness controlled for stereotyping",
+       x = "Conscientiousness for self",
+       y = "Conscientiousness for target",
+       linetype = "Group")
+```
+
+## Honesty/morality
+
+```{r honesty data}
+honesty_data <- clean_ptcheck %>% 
+  select(sub_id, BFI_number, TargBFI, selfBFI_c, stereoBFI_c, group_cond, 
+         identification_c) %>% 
+  filter(BFI_number == 16 | BFI_number == 17 | BFI_number == 18 | BFI_number == 19) %>% 
+  rename(self_c = selfBFI_c) %>% 
+  unique() %>% 
+  na.omit()
+
+contrasts(honesty_data$group_cond) <- contr.sum(2)
+```
+
+### Results
+
+```{r honesty model}
+honesty_model <- lmer(TargBFI ~ self_c*group_cond*stereoBFI_c  +
+                        + (self_c|sub_id),
+               data = honesty_data)
+
+summary(honesty_model)
+```
+
+### Plot
+
+```{r honesty plot}
+honesty_plot <- get_groupME_proj_plot(honesty_model)
+
+honesty_plot + 
+  labs(title = "Projection predicted by target group",
+       subtitle = "Projection using honesty/morality traits controlled for stereotyping",
+       x = "Honesty/Morality for self",
+       y = "Honesty/Morality for target",
+       linetype = "Group")
+```
